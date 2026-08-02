@@ -261,7 +261,7 @@ consume_data (j_decompress_ptr cinfo)
   /* JDIMENSION MCU_count; */   /* number of MCUs decoded */
   /* JDIMENSION last_iMCU_row = cinfo->total_iMCU_rows - 1; */
   int comp, ci /* , yoffset, row, prev_row */;
-  JSAMPARRAY buffer[MAX_COMPS_IN_SCAN];
+  JSAMPARRAY buffer[MAX_COMPONENTS];
   jpeg_component_info *compptr;
 
   /* Align the virtual buffers for the components used in this scan. */
