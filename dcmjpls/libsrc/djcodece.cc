@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2007-2025, OFFIS e.V.
+ *  Copyright (C) 2007-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -481,9 +481,12 @@ OFCondition DJLSEncoderBase::losslessRawEncode(
 
   if (result.good())
   {
-    // make sure that we have at least as many bytes of pixel data as we expect
-    if (bytesAllocated * samplesPerPixel * columns * rows *
-      OFstatic_cast(unsigned long,numberOfFrames) > length)
+    // make sure that we have at least as many bytes of pixel data as we expect.
+    // Compute the expected size in 64-bit arithmetic: the operands are 16-bit
+    // and would otherwise be multiplied as (32-bit) int and could wrap before
+    // the comparison, defeating this very check for large geometries.
+    if (OFstatic_cast(Uint64, bytesAllocated) * samplesPerPixel * columns * rows *
+      OFstatic_cast(Uint64, numberOfFrames) > length)
       result = EC_JLSUncompressedBufferTooSmall;
   }
 
