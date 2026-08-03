@@ -523,6 +523,36 @@ OFTEST(ofstd_safeSubtractAddMult)
       OFCHECK_EQUAL(a+1, OFnumeric_limits<unsigned int>::max());
   else
       OFCHECK_EQUAL(a, OFnumeric_limits<unsigned int>::max());
+
+  // --------------- Multiplication of types narrower than "int" ----------------
+  // these are promoted to (signed) "int" before being multiplied, so the product
+  // has to be checked in advance in order to avoid undefined behaviour
+
+  Uint16 c = OFnumeric_limits<Uint16>::max();
+  // check whether overflow occurred (it should): 65535 * 65535 exceeds "int"
+  OFCHECK( OFStandard::safeMult(c, c, c) == OFFalse);
+  // check whether c has not been modified
+  OFCHECK_EQUAL(c, OFnumeric_limits<Uint16>::max());
+
+  c = 256;
+  // check whether overflow occurred (it should): 65536 does not fit into Uint16
+  OFCHECK( OFStandard::safeMult(c, c, c) == OFFalse);
+  OFCHECK_EQUAL(c, 256);
+
+  c = 255;
+  // check whether no overflow occurred (it shouldn't): 255 * 257 = 65535
+  OFCHECK( OFStandard::safeMult(c, OFstatic_cast(Uint16, 257), c) == OFTrue);
+  OFCHECK_EQUAL(c, OFnumeric_limits<Uint16>::max());
+
+  Uint8 d = OFnumeric_limits<Uint8>::max();
+  // check whether overflow occurred (it should): 255 * 255 does not fit into Uint8
+  OFCHECK( OFStandard::safeMult(d, d, d) == OFFalse);
+  OFCHECK_EQUAL(d, OFnumeric_limits<Uint8>::max());
+
+  d = 15;
+  // check whether no overflow occurred (it shouldn't): 15 * 17 = 255
+  OFCHECK( OFStandard::safeMult(d, OFstatic_cast(Uint8, 17), d) == OFTrue);
+  OFCHECK_EQUAL(d, OFnumeric_limits<Uint8>::max());
 }
 
 OFTEST(ofstd_snprintf)

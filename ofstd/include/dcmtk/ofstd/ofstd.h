@@ -955,11 +955,15 @@ class DCMTK_OFSTD_EXPORT OFStandard
     static OFBool safeMult(T a, T b, T& product)
     {
         assert(!OFnumeric_limits<T>::is_signed);
-        T x = a * b;
-        if (a != 0 && x / a != b) {
+        /* check before multiplying (like safeAdd() does): computing the product first
+         * and dividing afterwards would be undefined behaviour for types that are
+         * narrower than "int", since both operands are then promoted to (signed) "int"
+         * and the product can exceed its range, e.g. 65535 * 65535 for Uint16
+         */
+        if ((a != 0) && (b > (OFnumeric_limits<T>::max)() / a)) {
             return OFFalse;
         }
-        product = x;
+        product = OFstatic_cast(T, a * b);
         return OFTrue;
     }
 
