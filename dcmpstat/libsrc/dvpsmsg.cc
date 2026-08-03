@@ -172,11 +172,22 @@ OFBool DVPSIPCMessage::extractStringFromPayload(OFString& str)
 {
   Uint32 length = 0;
   if (! extractIntFromPayload(length)) return OFFalse;
-  // check if we have sufficient data available
-  if (payloadReadOffset + length > payloadUsed) return OFFalse;
+  // Check if we have sufficient data available. The length is read from the payload,
+  // i.e. it is provided by the peer, so the sum is computed with overflow checking:
+  // it would otherwise wrap around and the check below would pass although the
+  // string extends beyond the data received.
+  Uint32 endOffset = 0;
+  if (! OFStandard::safeAdd(payloadReadOffset, length, endOffset)) return OFFalse;
+  if (endOffset > payloadUsed) return OFFalse;
 
-  str = (const char *)(payload+payloadReadOffset); // guaranteed to be zero terminated string
-  payloadReadOffset += length;
+  // The payload is received from the peer, so the string it contains is not
+  // necessarily zero terminated. Only use the number of bytes announced in the
+  // payload and stop at the first NUL byte within that range.
+  const unsigned char *strStart = payload + payloadReadOffset;
+  Uint32 strLength = 0;
+  while ((strLength < length) && (strStart[strLength] != 0)) ++strLength;
+  str.assign(OFreinterpret_cast(const char *, strStart), strLength);
+  payloadReadOffset = endOffset;
   return OFTrue;
 }
 
