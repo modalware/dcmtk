@@ -2081,13 +2081,22 @@ OFCondition DcmElement::getUncompressedFrameSize(DcmItem *dataset,
             }
             else
             {
-                /* compute frame size */
-                if ((effectiveBitsAllocated % 8) == 0)
+                /* compute frame size, checking each step for an overflow: the number of
+                 * pixels alone can exceed the 32-bit range (e.g. for 65535 x 65535 pixels
+                 * with 3 samples), in which case the frame size cannot be reported in the
+                 * Uint32 parameter and an error is returned instead of a truncated value
+                 */
+                Uint32 v1 = 0;
+                if (! OFStandard::safeMult(OFstatic_cast(Uint32, rows), OFstatic_cast(Uint32, cols), v1) ||
+                    ! OFStandard::safeMult(v1, OFstatic_cast(Uint32, samplesPerPixel), v1))
+                {
+                    DCMDATA_WARN("DcmElement: frame size too large, 32-bit integer overflow");
+                    result = EC_InvalidValue;
+                }
+                else if ((effectiveBitsAllocated % 8) == 0)
                 {
                     const Uint16 bytesAllocated = effectiveBitsAllocated / 8;
-                    const Uint32 v1 = rows * cols * samplesPerPixel;
-                    frameSize = bytesAllocated * v1;
-                    if (frameSize / bytesAllocated != v1)
+                    if (! OFStandard::safeMult(v1, OFstatic_cast(Uint32, bytesAllocated), frameSize))
                     {
                         DCMDATA_WARN("DcmElement: frame size too large, 32-bit integer overflow");
                         result = EC_InvalidValue;
@@ -2097,10 +2106,16 @@ OFCondition DcmElement::getUncompressedFrameSize(DcmItem *dataset,
                 {
                     // Split the calculation in order to avoid integer overflow for large pixel data.
                     // # old code: frameSize = (effectiveBitsAllocated * rows * cols * samplesPerPixel + 7) / 8;
-                    const Uint32 v1 = rows * cols * samplesPerPixel;
-                    const Uint32 v2 = (effectiveBitsAllocated / 8) * v1;
-                    const Uint32 v3 = ((effectiveBitsAllocated % 8) * v1 + 7) / 8;
-                    frameSize = v2 + v3;
+                    Uint32 v2 = 0;
+                    Uint32 v3 = 0;
+                    if (! OFStandard::safeMult(OFstatic_cast(Uint32, effectiveBitsAllocated / 8), v1, v2) ||
+                        ! OFStandard::safeMult(OFstatic_cast(Uint32, effectiveBitsAllocated % 8), v1, v3) ||
+                        ! OFStandard::safeAdd(v3, OFstatic_cast(Uint32, 7), v3) ||
+                        ! OFStandard::safeAdd(v2, OFstatic_cast(Uint32, v3 / 8), frameSize))
+                    {
+                        DCMDATA_WARN("DcmElement: frame size too large, 32-bit integer overflow");
+                        result = EC_InvalidValue;
+                    }
                 }
             }
         }
