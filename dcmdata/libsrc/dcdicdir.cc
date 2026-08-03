@@ -1240,7 +1240,13 @@ OFCondition DcmDicomDir::verify( OFBool autocorrect )
             i++;
         }
     }
-//    maxMRDRs = i;            // adjust table size to real value
+    // Adjust the table size to the number of entries that were actually filled in
+    // above. The initial value is only an upper bound since it assumes that every
+    // directory record is an MRDR. Without this adjustment, the remaining entries
+    // of the table are used below although they were never initialized, which
+    // happens for a DICOMDIR containing directory records that are not MRDRs and
+    // could not be moved into the record tree (e.g. orphaned records).
+    maxMRDRs = i;
 
     // count number of references for each MRDR
     countMRDRRefs( &getRootRecord(), refCounter, maxMRDRs );
