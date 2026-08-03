@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1996-2025, OFFIS e.V.
+ *  Copyright (C) 1996-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -29,6 +29,7 @@
 #include "dcmtk/ofstd/ofbmanip.h"
 #include "dcmtk/ofstd/ofcast.h"
 #include "dcmtk/ofstd/ofdiag.h"      /* for DCMTK_DIAGNOSTIC macros */
+#include "dcmtk/ofstd/ofstd.h"       /* for OFStandard::safeMult/safeAdd */
 
 #include "dcmtk/dcmimgle/diinpx.h"
 #include "dcmtk/dcmimgle/didocu.h"
@@ -376,15 +377,31 @@ class DiInputPixelTemplate
             /* Bits Allocated is always a multiple of 8 (see above), same for bits of T1 */
             const Uint32 byteFactor = bitsAllocated / 8;
             const Uint32 bytes_T1 = bitsof_T1 / 8;
-            const Uint32 count_T1 = OFstatic_cast(Uint32, (byteFactor == bytes_T1) ? PixelCount : (PixelCount * byteFactor + bytes_T1 - 1) / bytes_T1);
+            /* compute the element count with overflow checking: a truncated count would
+               under-size the buffer for large multi-frame pixel data, which is then
+               overrun by the decompression loop below (see the note on this known
+               limitation in DiImage::convertPixelData(), diimage.cc) */
+            unsigned long count_T1 = PixelCount;
+            OFBool countIsValid = OFTrue;
+            if (byteFactor != bytes_T1)
+            {
+                countIsValid = OFStandard::safeMult(PixelCount, OFstatic_cast(unsigned long, byteFactor), count_T1) &&
+                    OFStandard::safeAdd(count_T1, OFstatic_cast(unsigned long, bytes_T1 - 1), count_T1);
+                if (countIsValid)
+                    count_T1 /= bytes_T1;
+            }
 #ifdef DEBUG
             DCMIMGLE_TRACE("PixelCount: " << PixelCount << ", byteFactor: " << byteFactor << ", bytes_T1: " << bytes_T1 << ", count_T1: " << count_T1);
 #endif
             /* allocate temporary buffer, even number of bytes required for getUncompressedFrame() */
             const Uint32 extraByte = ((sizeof(T1) == 1) && (count_T1 & 1)) ? 1 : 0;
+            unsigned long allocCount = 0;
+            if (countIsValid)
+                countIsValid = OFStandard::safeAdd(count_T1, OFstatic_cast(unsigned long, extraByte), allocCount);
 
             /* use a non-throwing new here (if available) because the allocated buffer can be huge */
-            pixel = new (std::nothrow) T1[count_T1 + extraByte];
+            if (countIsValid)
+                pixel = new (std::nothrow) T1[allocCount];
             if (pixel != NULL)
             {
                 if (uncompressed)
@@ -445,11 +462,18 @@ class DiInputPixelTemplate
             const Uint32 length_B1 = lengthBytes / bitsAllocated;
             const Uint32 length_B2 = lengthBytes % bitsAllocated;
 //          # old code: Count = ((lengthBytes * 8) + bitsAllocated - 1) / bitsAllocated;
-            Count = 8 * length_B1 + (8 * length_B2 + bitsAllocated - 1) / bitsAllocated;
+            /* compute the pixel count with overflow checking: "8 * length_B1" would
+               otherwise be evaluated as (32-bit) int and wrap, under-sizing the buffer
+               relative to the conversion loops below (see the note on this known
+               limitation in DiImage::convertPixelData(), diimage.cc) */
+            const OFBool countIsValid =
+                OFStandard::safeMult(OFstatic_cast(unsigned long, 8), OFstatic_cast(unsigned long, length_B1), Count) &&
+                OFStandard::safeAdd(Count, OFstatic_cast(unsigned long, (8 * length_B2 + bitsAllocated - 1) / bitsAllocated), Count);
             unsigned long i;
 
             /* use a non-throwing new here (if available) because the allocated buffer can be huge */
-            Data = new (std::nothrow) T2[Count];
+            if (countIsValid)
+                Data = new (std::nothrow) T2[Count];
             if (Data != NULL)
             {
                 DCMIMGLE_TRACE("Input length: " << lengthBytes << " bytes, Pixel count: " << Count

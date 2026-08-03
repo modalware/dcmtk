@@ -547,8 +547,34 @@ void DiImage::convertPixelData()
     /* check for valid/supported pixel data encoding */
     if ((evr == EVR_OW) || ((evr == EVR_OB) && (compressed || (BitsAllocated <= 16))))
     {
-        const unsigned long fsize = OFstatic_cast(unsigned long, Rows) * OFstatic_cast(unsigned long, Columns) *
-            OFstatic_cast(unsigned long, SamplesPerPixel);
+        /* Compute the frame size and the derived pixel counts with overflow checking.
+         * These counts (see DiInputPixel: FrameSize, PixelStart, PixelCount) are stored
+         * in "unsigned long", which is 64 bits wide on LP64 (e.g. 64-bit Linux) but only
+         * 32 bits on ILP32 and on 64-bit Windows (LLP64). On the latter, a large image
+         * would silently truncate these counts and the under-sized buffers allocated from
+         * them would subsequently be overrun, so such images are rejected below.
+         *
+         * Known limitation: this rejects (instead of renders) images whose total pixel
+         * count is not representable in "unsigned long", i.e. exceeds 2^32-1 on the
+         * platforms mentioned above. Such images were never processed correctly there;
+         * they are now refused instead of corrupting memory. Actually supporting them
+         * would require converting the entire pixel-count chain of dcmimgle and dcmimage
+         * (DiInputPixel, DiMonoOutputPixel, DiColorOutputPixel and all pixel templates,
+         * i.e. more than 1000 occurrences of "unsigned long") to size_t. That would also
+         * change the signature of public getters such as DiInputPixel::getCount() and
+         * thus break the API/ABI of a widely used interface, which is why it is deferred
+         * to a planned release rather than done as part of a bug fix.
+         */
+        unsigned long fsize = 0;
+        unsigned long pixelStart = 0;
+        unsigned long pixelCount = 0;
+        /* the last two are the values that DiInputPixel derives from the frame size,
+         * i.e. PixelStart (first * fsize) and PixelCount/ComputedCount (number * fsize) */
+        const OFBool sizeIsValid =
+            OFStandard::safeMult(OFstatic_cast(unsigned long, Rows), OFstatic_cast(unsigned long, Columns), fsize) &&
+            OFStandard::safeMult(fsize, OFstatic_cast(unsigned long, SamplesPerPixel), fsize) &&
+            OFStandard::safeMult(OFstatic_cast(unsigned long, FirstFrame), fsize, pixelStart) &&
+            OFStandard::safeMult(OFstatic_cast(unsigned long, NumberOfFrames), fsize, pixelCount);
         if ((BitsAllocated < 1) || (BitsStored < 1))
         {
             ImageStatus = EIS_InvalidValue;
@@ -561,6 +587,17 @@ void DiImage::convertPixelData()
             ImageStatus = EIS_InvalidValue;
             DCMIMGLE_ERROR("invalid combination of values for 'BitsAllocated' (" << BitsAllocated << "), "
                 << "'BitsStored' (" << BitsStored << ") and 'HighBit' (" << HighBit << ")");
+            return;
+        }
+        else if (!sizeIsValid)
+        {
+            /* see the comment on the overflow-checked computation above: the pixel count
+               cannot be represented on this platform, so the image is refused instead of
+               processed with truncated (and therefore under-sized) buffers */
+            ImageStatus = EIS_InvalidValue;
+            DCMIMGLE_ERROR("cannot process image with " << Rows << "x" << Columns << " pixels, "
+                << SamplesPerPixel << " sample(s) per pixel and " << NumberOfFrames
+                << " frame(s): total number of pixels exceeds the capacity of this platform");
             return;
         }
         else if ((evr == EVR_OB) && (!compressed) && (BitsStored <= 8))
