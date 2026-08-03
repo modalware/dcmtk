@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1998-2024, OFFIS e.V.
+ *  Copyright (C) 1998-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -40,6 +40,19 @@
 
 #define PAYLOAD_ALLOCATION_UNIT 1024
 #define PAYLOAD_OFFSET 8
+
+/* Maximum number of payload bytes accepted in a received message (1 MByte).
+ * The messages defined for this interface consist of at most two integers and
+ * one text, and the largest text that can be produced is a C-STORE notification
+ * containing a file system path (up to PATH_MAX, i.e. typically 4096 bytes) plus
+ * two UIDs (64 bytes each) and some fixed labels, i.e. roughly 5 kBytes. This
+ * limit is far above that and, at the same time, small enough that the payload
+ * length taken from the message header cannot overflow the size computations
+ * based on it (see receive()).
+ * Note: the value is also documented in the API documentation of this constant,
+ * so it should be kept in sync with dvpsmsg.h.
+ */
+const Uint32 DVPSIPCMessage::maximumPayloadSize                         = 1048576;
 
 // constants for message type
 const Uint32 DVPSIPCMessage::OK                                         = 0;
@@ -214,6 +227,16 @@ OFBool DVPSIPCMessage::receive(DcmTransportConnection &connection)
   swapIfNecessary(gLocalByteOrder, EBO_BigEndian, payload, 2*sizeof(Uint32), sizeof(Uint32));
   messageType = *(Uint32 *)payload;
   payloadUsed = *(Uint32 *)(payload+sizeof(Uint32));
+
+  // The payload length is taken from the message header, i.e. it is provided by the
+  // peer. Reject implausible values: "payloadUsed + PAYLOAD_OFFSET" below would wrap
+  // around for a large value, so that the buffer would not be enlarged although the
+  // subsequent read expects it to be, which would overrun the buffer.
+  if (payloadUsed > maximumPayloadSize)
+  {
+    payloadUsed = PAYLOAD_OFFSET;
+    return OFFalse;
+  }
 
   // check if we need to allocate more memory
   Uint32 requiredSize = payloadUsed + PAYLOAD_OFFSET;

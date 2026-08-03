@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1998-2018, OFFIS e.V.
+ *  Copyright (C) 1998-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -60,6 +60,8 @@ public:
   Uint32 getMessageType() { return messageType; }
 
   /** adds a character string into the message payload.
+   *  The total payload should not exceed maximumPayloadSize because the
+   *  receiver rejects larger messages.
    *  @param str zero terminated string, may be NULL (in which case an empty string is added)
    */
   void addStringToPayload(const char *str);
@@ -98,7 +100,8 @@ public:
 
   /** receives a messages from the given transport connection
    *  and stores it in the current object, replacing any existing
-   *  payload.
+   *  payload. A message announcing a payload larger than
+   *  maximumPayloadSize is rejected without being read.
    *  @param connection transport connection to be used
    *  @return OFTrue if successful, OFFalse otherwise.
    */
@@ -131,6 +134,16 @@ public:
   static const Uint32 clientPrintSCP; // client is Print SCP
   static const Uint32 clientPrintSCU; // client is Print SCU
   static const Uint32 clientQRSCP;    // client is Query/Retrieve (Find/Move/Get) SCP
+
+  /** maximum size of the message payload in bytes, i.e. the maximum total size
+   *  of the values written with addIntToPayload() and addStringToPayload().
+   *  A message whose payload exceeds this limit is rejected by receive() and
+   *  should, therefore, not be created by the sender either. The current value
+   *  is 1 MByte (1048576 bytes), which is far above the size of the messages
+   *  defined for this interface, since these consist of a few integers and one
+   *  short text.
+   */
+  static const Uint32 maximumPayloadSize;
 
 private:
 
