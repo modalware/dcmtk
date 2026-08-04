@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1998-2025, OFFIS e.V.
+ *  Copyright (C) 1998-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -91,8 +91,12 @@ class DiYBRPixelTemplate
             // use the number of input pixels derived from the length of the 'PixelData'
             // attribute), but not more than the size of the intermediate buffer
             const unsigned long count = (this->InputCount < this->Count) ? this->InputCount : this->Count;
-            // make sure that there is sufficient input data (for planar pixel data)
-            if (!this->PlanarConfiguration || (count >= planeSize))
+            // Make sure that there is sufficient input data (for planar pixel data).
+            // The conversion below walks all planes of all frames, i.e. it reads
+            // "number of planes" times Count samples. Checking the pixel count that is
+            // capped at Count (see above) would not detect that whole planes or frames
+            // are missing, therefore the uncapped InputCount is compared here.
+            if (!this->PlanarConfiguration || (this->InputCount >= this->Count))
             {
                 if (rgb)    /* convert to RGB model */
                 {

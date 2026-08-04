@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1996-2016, OFFIS e.V.
+ *  Copyright (C) 1996-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -27,6 +27,7 @@
 
 #include "dcmtk/dcmimage/dicopxt.h"
 #include "dcmtk/dcmimgle/diinpx.h"  /* gcc 3.4 needs this */
+#include "dcmtk/ofstd/ofbmanip.h"
 
 
 /*---------------------*
@@ -88,7 +89,19 @@ class DiCMYKPixelTemplate
             const T2 maxvalue = OFstatic_cast(T2, DicomImageClass::maxval(bits));
             const T1 offset = OFstatic_cast(T1, DicomImageClass::maxval(bits - 1));
             const T1 *p = pixel;
-            if (this->PlanarConfiguration)
+            // Make sure that there is sufficient input data for planar pixel data: the
+            // conversion below walks all planes of all frames, i.e. it reads "number of
+            // planes" times Count samples. The pixel count used by the loops is capped at
+            // Count, so it would not detect that whole planes or frames are missing.
+            if (this->PlanarConfiguration && (this->InputCount < this->Count))
+            {
+                // do not process the input data, as it is too short
+                DCMIMAGE_WARN("input data is too short, filling the complete image with black pixels");
+                // erase empty part of the buffer (that has not been "blackened" yet)
+                for (int j = 0; j < 3; ++j)
+                    OFBitmanipTemplate<T2>::zeroMem(this->Data[j], count);
+            }
+            else if (this->PlanarConfiguration)
             {
 /*
                 const T1 *k;
