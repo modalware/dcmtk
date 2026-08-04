@@ -27,6 +27,7 @@
 #include "dcmtk/dcmdata/dctagkey.h"
 #include "dcmtk/dcmdata/dcpixel.h"
 #include "dcmtk/ofstd/ofbmanip.h"
+#include "dcmtk/ofstd/ofstd.h"
 #include "dcmtk/ofstd/ofutil.h"
 
 #include "dcmtk/dcmimgle/diovpln.h"
@@ -185,12 +186,26 @@ DiOverlayPlane::DiOverlayPlane(const DiDocument *docu,
                 DCMIMGLE_WARN("invalid value for 'OverlayBitPosition' (" << BitPosition << "), refers to bit position within stored pixel value");
                 Data = NULL;    // invalid plane
             }
-            /* expected length of overlay data */
-            const unsigned long expLen = (OFstatic_cast(unsigned long, NumberOfFrames) * OFstatic_cast(unsigned long, Rows) *
-                                          OFstatic_cast(unsigned long, Columns) * OFstatic_cast(unsigned long, BitsAllocated) + 7) / 8;
-            if ((Data != NULL) && ((length == 0) || (length < expLen)))
+            /* Expected length of overlay data, computed with overflow checking: these
+               counts are stored in "unsigned long", which is only 32 bits wide on ILP32
+               and on 64-bit Windows (LLP64). There, the product would otherwise wrap and
+               this check would accept an overlay that is far larger than the data
+               received, which is then written past the buffer allocated for it (see
+               create6xxx3000Data). */
+            unsigned long expLen = 0;
+            const OFBool expLenValid =
+                OFStandard::safeMult(OFstatic_cast(unsigned long, NumberOfFrames), OFstatic_cast(unsigned long, Rows), expLen) &&
+                OFStandard::safeMult(expLen, OFstatic_cast(unsigned long, Columns), expLen) &&
+                OFStandard::safeMult(expLen, OFstatic_cast(unsigned long, BitsAllocated), expLen) &&
+                OFStandard::safeAdd(expLen, OFstatic_cast(unsigned long, 7), expLen);
+            if (expLenValid)
+                expLen /= 8;
+            if ((Data != NULL) && (!expLenValid || (length == 0) || (length < expLen)))
             {
-                DCMIMGLE_ERROR("overlay data length is too short, " << expLen << " bytes expected but " << length << " bytes found");
+                if (expLenValid)
+                    DCMIMGLE_ERROR("overlay data length is too short, " << expLen << " bytes expected but " << length << " bytes found");
+                else
+                    DCMIMGLE_ERROR("overlay is too large to be processed on this platform");
                 Valid = 0;
                 Data = NULL;
             } else
@@ -489,10 +504,20 @@ unsigned long DiOverlayPlane::create6xxx3000Data(Uint8 *&buffer,
     width = Width;
     height = Height;
     frames = NumberOfFrames;
-    const unsigned long count = OFstatic_cast(unsigned long, Width) * OFstatic_cast(unsigned long, Height) * NumberOfFrames;
-    if (Valid && (count > 0))
+    /* Number of bits in the overlay and, rounded up to a multiple of 16 bits, the number
+       of bytes needed for them. Both are computed with overflow checking because
+       "unsigned long" is only 32 bits wide on ILP32 and on 64-bit Windows (LLP64), where
+       the products would otherwise wrap and the buffer allocated below would be far too
+       small for the loop that fills it. */
+    unsigned long count = 0;
+    unsigned long count8 = 0;
+    const OFBool countValid =
+        OFStandard::safeMult(OFstatic_cast(unsigned long, Width), OFstatic_cast(unsigned long, Height), count) &&
+        OFStandard::safeMult(count, OFstatic_cast(unsigned long, NumberOfFrames), count) &&
+        OFStandard::safeAdd(count, OFstatic_cast(unsigned long, 15), count8);
+    if (Valid && countValid && (count > 0))
     {
-        const unsigned long count8 = ((count + 15) / 16) * 2;           // round value: 16 bit padding
+        count8 = (count8 / 16) * 2;                                     // round value: 16 bit padding
         buffer = new Uint8[count8];
         if (buffer != NULL)
         {
