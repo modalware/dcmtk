@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2001-2024, OFFIS e.V.
+ *  Copyright (C) 2001-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -421,7 +421,14 @@ OFCondition DJDecompressIJG12Bit::decode(
     buffer = OFreinterpret_cast(JSAMPARRAY, jsampBuffer);
   }
 
-  if (uncompressedFrameBufferSize < rowsize * cinfo->output_height) return EJ_IJG12_FrameBufferTooSmall;
+  /* Compare in 64-bit: 'rowsize' is a size_t, which is only 32 bits wide on ILP32,
+     and 'output_height' is a 32-bit unsigned int, so the product could wrap there.
+     The check would then pass although the decompressed image does not fit into the
+     frame buffer, and the copy below would write past it. The product cannot exceed
+     the 64-bit range because both factors are bounded by the JPEG image dimensions. */
+  if (OFstatic_cast(Uint64, uncompressedFrameBufferSize) <
+      OFstatic_cast(Uint64, rowsize) * OFstatic_cast(Uint64, cinfo->output_height))
+    return EJ_IJG12_FrameBufferTooSmall;
 
   while (cinfo->output_scanline < cinfo->output_height)
   {
