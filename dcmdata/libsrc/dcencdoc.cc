@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2018-2025, OFFIS e.V.
+ *  Copyright (C) 2018-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -947,6 +947,20 @@ OFCondition DcmEncapsulatedDocument::insertEncapsulatedDocument()
     // determine length of document file
     if (0 == stat(ifname_.c_str(), &fileStat))
     {
+      /* The document is stored in a DICOM element whose length is a 32-bit value that
+       * also has to be even, so larger documents cannot be represented.  Without this
+       * check, the size would be truncated when the element is created below, and the
+       * buffer allocated for the document would be much too small for its content.
+       * The check is performed before the conversion to size_t because that conversion
+       * could already truncate the size on systems where size_t is 32 bits wide.  A
+       * negative size, which should never be reported for a regular file, is converted
+       * to a large unsigned value and rejected as well.
+       */
+      if (OFstatic_cast(Uint64, fileStat.st_size) > OFstatic_cast(Uint64, 0xfffffffeUL))
+      {
+        DCMDATA_ERROR("file " << ifname_ << " is too large to be encapsulated in a DICOM element");
+        return EC_InvalidStream;
+      }
       fileSize = OFstatic_cast(size_t, fileStat.st_size);
     }
     else
