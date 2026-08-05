@@ -63,6 +63,13 @@ JLS_ERROR CheckParameterCoherent(const JlsParameters* pparams)
 	if (pparams->ilv < 0 || pparams->ilv > 2)
 		throw JlsException(InvalidCompressedData);
 
+	// The RESET parameter is kept in a single byte by the run mode context, so a
+	// larger value is truncated. A value truncated to zero is never reached by the
+	// counter, and the computation of the Golomb code length would then loop
+	// forever. A value of zero means that the default value is used.
+	if (pparams->custom.RESET < 0 || pparams->custom.RESET > 255)
+		return ParameterValueNotSupported;
+
 	if (pparams->bitspersample < 6 || pparams->bitspersample > 16)
 		return ParameterValueNotSupported;
 
