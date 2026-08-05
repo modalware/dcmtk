@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1994-2011, OFFIS e.V.
+ *  Copyright (C) 1994-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -174,7 +174,9 @@ public:
     return offset_;
   }
 
-  /** returns pointer to the output buffer
+  /** returns pointer to the output buffer.
+   *  Only the first size() bytes of the buffer contain decompressed data.
+   *  The remaining bytes are not initialized and must not be evaluated.
    */
   inline void *getOutputBuffer() const
   {
