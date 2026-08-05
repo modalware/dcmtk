@@ -232,11 +232,24 @@ static OFString &dicomToHostFilename(const OFString &dicomFilename,
 }
 
 
-// check whether given DICOM file exists
+// check whether given DICOM file exists within the given directory (the file set root)
 static OFBool locateDicomFile(const OFString &dicomFilename,
+                              const OFString &directory,
                               OFString &hostFilename)
 {
-    dicomToHostFilename(dicomFilename, hostFilename);
+    hostFilename.clear();
+    /* make sure that the file ID cannot refer to a file outside of the file set.
+     * Lowercase letters are accepted because a lowercase version of the referenced
+     * file is looked for below, i.e. such file IDs have always been supported here.
+     */
+    if (!DicomDirInterface::isReferencedFileIDSafe(dicomFilename, OFTrue /*allowLowercase*/))
+    {
+        DCMDATA_ERROR("referenced file ID does not denote a file within the file set: " << dicomFilename);
+        return OFFalse;
+    }
+    OFString fileName;
+    dicomToHostFilename(dicomFilename, fileName);
+    OFStandard::combineDirAndFilename(hostFilename, directory, fileName, OFTrue /*allowEmptyDirName*/);
     OFBool result = OFStandard::fileExists(hostFilename);
     if (!result)
     {
@@ -247,7 +260,8 @@ static OFBool locateDicomFile(const OFString &dicomFilename,
     if (!result)
     {
         /* lowercase */
-        dicomToHostFilename(dicomFilename, hostFilename, OFTrue /*mapToLower*/);
+        dicomToHostFilename(dicomFilename, fileName, OFTrue /*mapToLower*/);
+        OFStandard::combineDirAndFilename(hostFilename, directory, fileName, OFTrue /*allowEmptyDirName*/);
         result = OFStandard::fileExists(hostFilename);
         if (!result)
         {
@@ -2949,7 +2963,14 @@ OFBool DicomDirInterface::recordMatchesDataset(DcmDirectoryRecord *record,
                     if (!getStringFromDataset(record, DCM_ReferencedFileID, refFilename).empty())
                     {
                         OFString hostFilename;
-                        if (locateDicomFile(refFilename, hostFilename))
+                        /* the file ID is relative to the root of the file set, i.e. to
+                         * the directory in which the DICOMDIR file is located
+                         */
+                        OFString directory;
+                        OFStandard::getDirNameFromPath(directory,
+                            OFSTRING_GUARD(DicomDir->getDirFileName().getCharPointer()),
+                            OFFalse /*assumeDirName*/);
+                        if (locateDicomFile(refFilename, directory, hostFilename))
                         {
                             result = compare(getStringFromFile(hostFilename, DCM_StudyInstanceUID, recordString),
                                              getStringFromDataset(dataset, DCM_StudyInstanceUID, datasetString));
