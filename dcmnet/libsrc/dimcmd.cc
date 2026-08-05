@@ -401,9 +401,27 @@ getAttributeList(DcmDataset *obj, DcmTagKey t, Uint16 **lst, int *listCount)
         nBytes = elem->getLength();
         *listCount = (int)(nBytes / sizeof(Uint16));
         if (*listCount > 0) {
-            *lst = (Uint16*)malloc((size_t)(nBytes + 1));
+            /* the value of the element is only accessed if it could be read, and the
+             * copy is only performed if the buffer could be allocated. Since the length
+             * of the element is determined by the sender, the allocation can well fail,
+             * in which case the list is reported as absent instead of being copied from
+             * or to a NULL pointer.
+             */
             ec = elem->getUint16Array(aList);
-            memcpy(*lst, aList, (size_t)nBytes);
+            if (ec.good() && (aList != NULL)) {
+                /* the addition is performed on size_t because nBytes could otherwise
+                 * wrap around to zero
+                 */
+                *lst = OFstatic_cast(Uint16 *, malloc(OFstatic_cast(size_t, nBytes) + 1));
+                if (*lst != NULL)
+                    memcpy(*lst, aList, (size_t)nBytes);
+                else
+                    ec = EC_MemoryExhausted;
+            }
+            if (ec.bad()) {
+                *lst = NULL;
+                *listCount = 0;
+            }
         } else {
             *lst = NULL;
         }
