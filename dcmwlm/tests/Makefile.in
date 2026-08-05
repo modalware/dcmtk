@@ -25,7 +25,7 @@ LIBDIRS = -L$(top_srcdir)/libsrc -L$(dcmnetdir)/libsrc -L$(dcmdatadir)/libsrc \
 LOCALLIBS = -ldcmwlm -ldcmnet -ldcmdata -loflog -lofstd -loficonv $(ZLIBLIBS) \
 	$(TCPWRAPPERLIBS) $(CHARCONVLIBS) $(MATHLIBS)
 
-test_objs = tests.o twlaetval.o twlmatch.o
+test_objs = tests.o twlaetval.o twlallret.o twlmatch.o
 objs = wltest.o $(test_objs)
 progs = wltest tests
 

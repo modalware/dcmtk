@@ -81,6 +81,8 @@ class WlmConsoleEngineFileSystem
     OFBool opt_noSequenceExpansion;
     /// indicates if wl-files which are lacking return type 1 attributes or information in such attributes shall be rejected or not
     OFBool opt_enableRejectionOfIncompleteWlFiles;
+    /// indicates if arbitrary (non-sequence) attributes on the main level of the search mask shall be accepted as return keys
+    OFBool opt_enableAllReturnKeys;
     /// blocking mode for DIMSE operations
     T_DIMSE_BlockingMode opt_blockMode;
     /// timeout for DIMSE operations

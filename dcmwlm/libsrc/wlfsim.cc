@@ -378,49 +378,25 @@ void WlmFileSystemInteractionManager::GetAttributeValueForMatchingRecord( DcmTag
   DcmSequenceOfItems *sequenceElement = NULL, *tmp = NULL;
   unsigned long i;
   const char *val = NULL;
-  Uint16 v;
   size_t len = 0;
 
   // if the element in question is not contained in another sequence
   if( numOfSuperiorSequences == 0 )
   {
     // simply find and get this element in the matching dataset (on the main level);
-    // here, we have to distinguish two cases: attribute PregnancyStatus has to be re-
-    // trieved as a Uint16 value (also note for this case, that this attribute can only
-    // occur on the main level, it will never be contained in a sequence), all other
-    // attributes have to be retrieved as strings
-    if( tag == DCM_PregnancyStatus )
+    // the value is retrieved as a string, note that findAndGetOFStringArray() also
+    // converts values of binary value representations (e.g. US, as used by attribute
+    // PregnancyStatus) to their decimal string representation
+    OFString stringValue;
+    cond = matchingRecords[idx]->findAndGetOFStringArray( tag, stringValue, OFFalse );
+    if( cond.bad() && tag == DCM_PregnancyStatus )
     {
-      cond = matchingRecords[idx]->findAndGetUint16( tag, v, 0, OFFalse );
-      if( cond.good() )
-      {
-        len = 20;
-        value = new char[len];
-        OFStandard::snprintf(value, len, "%u", v );
-      }
-      else
-      {
-        len = 2;
-        value = new char[len];
-        OFStandard::strlcpy( value, "4", len );           // a value of "4" in attribute PregnancyStatus means "unknown" in DICOM
-      }
+      // a value of "4" in attribute PregnancyStatus means "unknown" in DICOM
+      stringValue = "4";
     }
-    else
-    {
-      cond = matchingRecords[idx]->findAndGetString( tag, val, OFFalse );
-      if( cond.good() && val != NULL )
-      {
-        len = strlen( val ) + 1;
-        value = new char[len];
-        OFStandard::strlcpy( value, val, len );
-      }
-      else
-      {
-        len = 1;
-        value = new char[len];
-        OFStandard::strlcpy( value, "", len );
-      }
-    }
+    len = stringValue.length() + 1;
+    value = new char[len];
+    OFStandard::strlcpy( value, stringValue.c_str(), len );
   }
   else
   {

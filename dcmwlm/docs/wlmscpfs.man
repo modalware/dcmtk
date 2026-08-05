@@ -99,6 +99,15 @@ returned character set:
   -csk  --keep-char-set
           return character set provided in file
 
+handling of return key attributes:
+
+  +ear  --enable-all-return
+          accept any (non-sequence) attribute on main
+          dataset level as return key
+
+  -ear  --disable-all-return
+          accept supported return keys only (default)
+
 other processing options:
 
   -nse  --no-sq-expansion
@@ -660,6 +669,19 @@ As return keys the following attributes are currently supported by \b wlmscpfs:
 
 The attribute (0008,0005) SpecificCharacterSet is a special case and its
 support by \b wlmscpfs is discussed in the NOTES section above.
+
+Note that if the return key attribute (0010,21c0) PregnancyStatus is
+requested but not contained in a worklist file, it is returned with value 4
+("unknown") instead of an empty value.
+
+The option \e --enable-all-return can be used to lift the above restriction
+on the set of supported return key attributes: any other non-sequence
+attribute on the main level of the query is then also accepted as a return
+key attribute and filled with the value found in the matching worklist file,
+or returned with an empty value if the worklist file does not contain the
+attribute.  Such attributes consequently no longer cause the C-FIND response
+status "Pending with warning" to be returned.  Sequence attributes as well
+as attributes within sequences are not affected by this option.
 
 \subsection wlmscpfs_access_control Access Control
 

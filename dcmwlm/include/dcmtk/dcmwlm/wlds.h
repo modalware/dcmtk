@@ -72,6 +72,9 @@ class DCMTK_DCMWLM_EXPORT WlmDataSource
     OFBool readLockSetOnDataSource;
     /// indicates if the expansion of empty sequence attributes shall take place or not
     OFBool noSequenceExpansion;
+    /// indicates if arbitrary (non-sequence) attributes on the main level of the search
+    /// mask shall be accepted as return key attributes
+    OFBool enableAllReturnKeys;
     /// returned character set type
     WlmReturnedCharacterSetType returnedCharacterSet;
     /// array of matching datasets
@@ -242,6 +245,9 @@ class DCMTK_DCMWLM_EXPORT WlmDataSource
        *     > DCM_CodingSchemeVersion                            (0008,0103)  SH  O  3
        *     > DCM_CodingSchemeDesignator                         (0008,0102)  SH  O  1C
        *     > DCM_CodeMeaning                                    (0008,0104)  LO  O  3
+       *  Note that in case member variable enableAllReturnKeys is OFTrue, arbitrary non-sequence
+       *  attributes on the main level of the dataset (except Specific Character Set (0008,0005))
+       *  are also considered to be supported return key attributes.
        *  @param element            Pointer to the element which shall be checked.
        *  @param supSequenceElement Pointer to the superordinate sequence element of which
        *                            the currently processed element is an attribute, or NULL if
@@ -369,6 +375,11 @@ class DCMTK_DCMWLM_EXPORT WlmDataSource
        *  @param value The value to set.
        */
     void SetNoSequenceExpansion( OFBool value );
+
+      /** Set value in a member variable.
+       *  @param value The value to set.
+       */
+    void SetEnableAllReturnKeys( OFBool value );
 
       /** Set value in member variable.
        *  @param value The value to set.

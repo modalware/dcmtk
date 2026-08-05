@@ -56,7 +56,8 @@ WlmDataSource::WlmDataSource()
   : failOnInvalidQuery( OFTrue ), callingApplicationEntityTitle(""), calledApplicationEntityTitle(""),
     identifiers( NULL ), errorElements( NULL ), offendingElements( NULL ), errorComment( NULL ),
     foundUnsupportedOptionalKey( OFFalse ), readLockSetOnDataSource( OFFalse ),
-    noSequenceExpansion( OFFalse ), returnedCharacterSet( RETURN_NO_CHARACTER_SET ), matchingDatasets(),
+    noSequenceExpansion( OFFalse ), enableAllReturnKeys( OFFalse ),
+    returnedCharacterSet( RETURN_NO_CHARACTER_SET ), matchingDatasets(),
     specificCharacterSet( "" ), superiorSequenceArray( NULL ),
     numOfSuperiorSequences( 0 )
 {
@@ -124,6 +125,16 @@ void WlmDataSource::SetNoSequenceExpansion( OFBool value )
 // Return Value : none.
 {
   noSequenceExpansion = value;
+}
+
+// ----------------------------------------------------------------------------
+
+void WlmDataSource::SetEnableAllReturnKeys( OFBool value )
+// Task         : Set member variable.
+// Parameters   : value - Value for member variable.
+// Return Value : none.
+{
+  enableAllReturnKeys = value;
 }
 
 // ----------------------------------------------------------------------------
@@ -1222,6 +1233,10 @@ OFBool WlmDataSource::IsSupportedReturnKeyAttribute( DcmElement *element, DcmSeq
 //                    > DCM_CodingSchemeVersion                            (0008,0103)  SH  O  3
 //                    > DCM_CodingSchemeDesignator                         (0008,0102)  SH  O  1C
 //                    > DCM_CodeMeaning                                    (0008,0104)  LO  O  3
+//                Note that in case member variable enableAllReturnKeys is OFTrue, arbitrary
+//                non-sequence attributes on the main level of the dataset (except Specific
+//                Character Set (0008,0005)) are also considered to be supported return key
+//                attributes.
 // Parameters   : element            - [in] Pointer to the element which shall be checked.
 //                supSequenceElement - [in] Pointer to the superordinate sequence element of which
 //                                     the currently processed element is an attribute, or NULL if
@@ -1303,7 +1318,13 @@ OFBool WlmDataSource::IsSupportedReturnKeyAttribute( DcmElement *element, DcmSeq
   }
   else
   {
-    if( elementKey == DCM_ScheduledProcedureStepSequence                    ||
+    // in case the option for accepting all return key attributes is enabled, any non-sequence
+    // attribute on the main level of the dataset is considered to be a supported return key
+    // attribute; Specific Character Set (0008,0005) is excluded from this rule since it
+    // receives special treatment elsewhere
+    if( enableAllReturnKeys && element->ident() != EVR_SQ && elementKey != DCM_SpecificCharacterSet )
+      isSupportedReturnKeyAttribute = OFTrue;
+    else if( elementKey == DCM_ScheduledProcedureStepSequence               ||
         elementKey == DCM_RequestedProcedureID                              ||
         elementKey == DCM_RequestedProcedureDescription                     ||
         elementKey == DCM_StudyInstanceUID                                  ||

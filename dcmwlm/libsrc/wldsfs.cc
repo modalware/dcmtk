@@ -499,18 +499,10 @@ void WlmDataSourceFileSystem::HandleNonSequenceElementInResultDataset( DcmElemen
     char *value = NULL;
     fileSystemInteractionManager.GetAttributeValueForMatchingRecord( tag, superiorSequenceArray, numOfSuperiorSequences, idx, value );
 
-    // put value in element
-    // (note that there is currently one attribute (DCM_PregnancyStatus) for which the value must not
-    // be set as a string but as an unsigned integer, because this attribute is of type US. Hence, in
-    // case we are dealing with the attribute DCM_PregnancyStatus, we have to convert the returned
-    // value into an unsigned integer and set it correspondingly in the element variable)
-    if( tag == DCM_PregnancyStatus )
-    {
-      Uint16 uintValue = OFstatic_cast(Uint16, atoi( value ));
-      cond = element->putUint16( uintValue );
-    }
-    else
-      cond = element->putString( value );
+    // put value in element; note that DcmElement::putString() also parses the decimal
+    // string representation of binary value representations (e.g. US, as used by
+    // attribute DCM_PregnancyStatus)
+    cond = element->putString( value );
     if( cond.bad() )
       DCMWLM_WARN("WlmDataSourceFileSystem::HandleNonSequenceElementInResultDataset: Could not set value in result element");
 

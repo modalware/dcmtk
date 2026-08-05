@@ -1,6 +1,6 @@
 # declare executables
 DCMTK_ADD_TEST_EXECUTABLE(wltest wltest.cc)
-DCMTK_ADD_TEST_EXECUTABLE(dcmwlm_tests tests.cc twlaetval.cc twlmatch.cc)
+DCMTK_ADD_TEST_EXECUTABLE(dcmwlm_tests tests.cc twlaetval.cc twlallret.cc twlmatch.cc)
 
 # make sure executables are linked to the corresponding libraries
 DCMTK_TARGET_LINK_MODULES(wltest dcmwlm dcmtls)

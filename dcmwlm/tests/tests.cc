@@ -25,6 +25,7 @@
 
 OFTEST_REGISTER(dcmwlm_aetitle_validation);
 OFTEST_REGISTER(dcmwlm_vetmed_matching);
+OFTEST_REGISTER(dcmwlm_all_return_keys);
 
 #ifdef WITH_TCPWRAPPER
 // This dummy function creates a dependency on libdcmnet that is required when compiling

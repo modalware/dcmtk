@@ -75,7 +75,8 @@ WlmConsoleEngineFileSystem::WlmConsoleEngineFileSystem( int argc, char *argv[], 
     opt_maxPDU( ASC_DEFAULTMAXPDU ), opt_networkTransferSyntax( EXS_Unknown ),
     opt_failInvalidQuery( OFTrue ), opt_singleProcess( OFTrue ),
     opt_forkedChild( OFFalse ), opt_maxAssociations( 50 ), opt_noSequenceExpansion( OFFalse ),
-    opt_enableRejectionOfIncompleteWlFiles( OFTrue ), opt_blockMode(DIMSE_BLOCKING),
+    opt_enableRejectionOfIncompleteWlFiles( OFTrue ), opt_enableAllReturnKeys( OFFalse ),
+    opt_blockMode(DIMSE_BLOCKING),
     opt_dimse_timeout(0), opt_acse_timeout(30), app( NULL ), cmd( NULL ), command_argc( argc ),
     command_argv(argv), dataSource( dataSourcev ), tlsOptions ( NET_ACCEPTOR )
 {
@@ -132,6 +133,9 @@ WlmConsoleEngineFileSystem::WlmConsoleEngineFileSystem( int argc, char *argv[], 
       cmd->addOption("--return-no-char-set",  "-cs0",    "return no specific character set (default)");
       cmd->addOption("--return-iso-ir-100",   "-cs1",    "return specific character set ISO IR 100");
       cmd->addOption("--keep-char-set",       "-csk",    "return character set provided in file");
+    cmd->addSubGroup("handling of return key attributes:");
+      cmd->addOption("--enable-all-return",   "+ear",    "accept any (non-sequence) attribute on main\ndataset level as return key");
+      cmd->addOption("--disable-all-return",  "-ear",    "accept supported return keys only (default)");
     cmd->addSubGroup("other processing options:");
       cmd->addOption("--no-sq-expansion",     "-nse",    "disable expansion of empty sequences in C-FIND\nrequest messages");
 
@@ -276,6 +280,11 @@ WlmConsoleEngineFileSystem::WlmConsoleEngineFileSystem( int argc, char *argv[], 
     if( cmd->findOption("--keep-char-set") ) opt_returnedCharacterSet = RETURN_CHARACTER_SET_FROM_FILE;
     cmd->endOptionBlock();
 
+    cmd->beginOptionBlock();
+    if( cmd->findOption("--enable-all-return") ) opt_enableAllReturnKeys = OFTrue;
+    if( cmd->findOption("--disable-all-return") ) opt_enableAllReturnKeys = OFFalse;
+    cmd->endOptionBlock();
+
     if( cmd->findOption("--no-sq-expansion") ) opt_noSequenceExpansion = OFTrue;
 
     // network options
@@ -370,6 +379,7 @@ WlmConsoleEngineFileSystem::WlmConsoleEngineFileSystem( int argc, char *argv[], 
 
   // set general parameters in data source object
   dataSource->SetNoSequenceExpansion( opt_noSequenceExpansion );
+  dataSource->SetEnableAllReturnKeys( opt_enableAllReturnKeys );
   dataSource->SetReturnedCharacterSet( opt_returnedCharacterSet );
 
   // set specific parameters in data source object
