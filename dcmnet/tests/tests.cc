@@ -25,7 +25,6 @@
 
 OFTEST_REGISTER(dcmnet_dimseDump_nullByte);
 OFTEST_REGISTER(dcmnet_dimseStatusClass);
-OFTEST_REGISTER(dcmnet_storageSCU_referencedFileIDSafety);
 OFTEST_REGISTER(dcmnet_parseAssociate_extNeg_truncated);
 OFTEST_REGISTER(dcmnet_parseAssociate_extNeg_malformed_itemLength);
 OFTEST_REGISTER(dcmnet_parseAssociate_duplicate_userIdentity);

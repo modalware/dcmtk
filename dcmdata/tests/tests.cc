@@ -25,6 +25,7 @@
 
 OFTEST_REGISTER(dcmdata_partialElementAccess);
 OFTEST_REGISTER(dcmdata_i2d_bmp);
+OFTEST_REGISTER(dcmdata_referencedFileIDSafety);
 OFTEST_REGISTER(dcmdata_checkStringValue);
 OFTEST_REGISTER(dcmdata_determineVM);
 OFTEST_REGISTER(dcmdata_getValueFromString);

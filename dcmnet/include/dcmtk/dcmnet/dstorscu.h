@@ -362,24 +362,6 @@ class DCMTK_DCMNET_EXPORT DcmStorageSCU
      */
     OFCondition createReportFile(const OFString &filename) const;
 
-    /** check whether a Referenced File ID (0004,1500) read from a DICOMDIR is
-     *  safe to be used as a relative pathname below the DICOMDIR directory.
-     *  A Referenced File ID is a DICOM File ID (see PS3.10): one or more
-     *  components separated by backslashes, where each component is a non-empty
-     *  string of uppercase letters, digits and underscore.  Accepting only such
-     *  values prevents a path traversal, because a value that contains no '.',
-     *  '/', ':' or empty component can express neither a ".." parent reference,
-     *  nor an absolute path, nor a Windows drive letter, i.e. it always resolves
-     *  to a plain relative path below the DICOMDIR directory.  This method is
-     *  used by addDicomFilesFromDICOMDIR() to reject malicious Referenced File
-     *  IDs before the file is opened.
-     *  @param  fileID  value of the Referenced File ID (in DICOM format, i.e.
-     *                  with backslashes as component separators)
-     *  @return OFTrue if the value is a safe relative File ID, OFFalse otherwise
-     */
-    static OFBool isReferencedFileIDSafe(const OFString &fileID);
-
-
   protected:
 
     /** internal class/struct for a single transfer entry

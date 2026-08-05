@@ -3,6 +3,7 @@ DCMTK_ADD_TEST_EXECUTABLE(dcmdata_tests
   tbytestr.cc
   tchval.cc
   tcond.cc
+  tdicdir.cc
   tdict.cc
   telemlen.cc
   tfrmsiz.cc

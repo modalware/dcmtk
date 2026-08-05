@@ -1480,6 +1480,38 @@ OFBool DicomDirInterface::isFilenameValid(const OFFilename &filename,
 }
 
 
+// check whether a Referenced File ID is safe to be used as a relative pathname
+OFBool DicomDirInterface::isReferencedFileIDSafe(const OFString &fileID,
+                                                 const OFBool allowLowercase)
+{
+    const size_t length = fileID.length();
+    if (length == 0)
+        return OFFalse;
+    size_t componentLength = 0;
+    for (size_t i = 0; i < length; ++i)
+    {
+        const char c = fileID[i];
+        // backslash separates components; an empty component is not allowed
+        if (c == '\\')
+        {
+            if (componentLength == 0)
+                return OFFalse;
+            componentLength = 0;
+        }
+        // only uppercase letters, digits and underscore are allowed within a
+        // component (this excludes '.', '/', ':' and space), and lowercase
+        // letters if the caller accepts non-conformant file IDs
+        else if (((c >= 'A') && (c <= 'Z')) || ((c >= '0') && (c <= '9')) || (c == '_') ||
+                 (allowLowercase && (c >= 'a') && (c <= 'z')))
+            ++componentLength;
+        else
+            return OFFalse;
+    }
+    // reject a trailing backslash (empty last component)
+    return (componentLength > 0);
+}
+
+
 // check whether the specified character set is defined in the DICOM standard
 OFBool DicomDirInterface::isCharsetValid(const char *charset)
 {

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2002-2025, OFFIS e.V.
+ *  Copyright (C) 2002-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -261,6 +261,26 @@ class DCMTK_DCMDATA_EXPORT DicomDirInterface
      */
     OFBool isFilenameValid(const OFFilename &filename,
                            const OFBool allowEmpty = OFFalse);
+
+    /** check whether a Referenced File ID (0004,1500) read from a DICOMDIR is
+     *  safe to be used as a relative pathname below the DICOMDIR directory.
+     *  A Referenced File ID is a DICOM File ID (see PS3.10): one or more
+     *  components separated by backslashes, where each component is a non-empty
+     *  string of uppercase letters, digits and underscore.  Accepting only such
+     *  values prevents a path traversal, because a value that contains no '.',
+     *  '/', ':' or empty component can express neither a ".." parent reference,
+     *  nor an absolute path, nor a Windows drive letter, i.e. it always resolves
+     *  to a plain relative path below the DICOMDIR directory.
+     *  @param fileID value of the Referenced File ID (in DICOM format, i.e. with
+     *    backslashes as component separators)
+     *  @param allowLowercase also accept lowercase letters within a component.
+     *    Such a File ID does not conform to the DICOM standard, but it does occur
+     *    in practice, and it is just as safe as an uppercase one.  This parameter
+     *    only affects the letters that are accepted, nothing else.
+     *  @return OFTrue if the value is a safe relative File ID, OFFalse otherwise
+     */
+    static OFBool isReferencedFileIDSafe(const OFString &fileID,
+                                         const OFBool allowLowercase = OFFalse);
 
     /** check whether given charset identifier is valid.
      *  Valid character sets are (see DICOM PS3.3 for details): ISO_IR 100, ISO_IR 101,
