@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2001-2025, OFFIS e.V.
+ *  Copyright (C) 2001-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -388,6 +388,9 @@ private:
 
   /// buffer into which uncompressed pixel data is written
   char *m_output_buffer;
+
+  /// size of the buffer into which uncompressed pixel data is written, in bytes
+  size_t m_output_buffer_size;
 
   /// offset list object used for the creation of encapsulated datasets
   DcmOffsetList m_offsetList;

@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2007-2025, OFFIS e.V.
+ *  Copyright (C) 2007-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -64,6 +64,7 @@ Image2Dcm::Image2Dcm()
 , m_compressionRatio(1.0)
 , m_conversionFlags(0)
 , m_output_buffer(NULL)
+, m_output_buffer_size(0)
 , m_offsetList()
 , m_pixelSequence(NULL)
 , m_offsetTable(NULL)
@@ -634,9 +635,23 @@ OFCondition Image2Dcm::readAndInsertPixelDataFirstFrame(
       return cond;
     }
 
-    DCMDATA_LIBI2D_DEBUG("Image2Dcm: frame size=" << m_frameLength << ", number of frames=" << numberOfFrames << ", length of pixel data array=" << ((m_frameLength * numberOfFrames + 1)/2)*2);
+    /* All frames are stored in a single DICOM element, whose length is a 32-bit value
+     * that also has to be even, so the overall size of the pixel data is limited.
+     * Without this check, the number of words passed to createUint16Array() would be
+     * truncated, while the frames are copied using the untruncated frame length and
+     * frame offsets, i.e. beyond the end of the allocated buffer.  The computation is
+     * performed in 64 bits because size_t is only 32 bits wide on some platforms.
+     */
+    const Uint64 pixelDataLength = OFstatic_cast(Uint64, m_frameLength) * numberOfFrames;
+    DCMDATA_LIBI2D_DEBUG("Image2Dcm: frame size=" << m_frameLength << ", number of frames=" << numberOfFrames << ", length of pixel data array=" << ((pixelDataLength + 1)/2)*2);
+    if (pixelDataLength > OFstatic_cast(Uint64, 0xfffffffeUL))
+    {
+      DCMDATA_LIBI2D_ERROR("Image2Dcm: pixel data of all frames is too large to be stored in a DICOM element");
+      delete[] pixData;
+      return EC_ElemLengthExceeds32BitField;
+    }
     Uint16 *array = NULL;
-    size_t arraySize = (m_frameLength * numberOfFrames + 1)/2;
+    size_t arraySize = OFstatic_cast(size_t, (pixelDataLength + 1)/2);
     cond = pixelData->createUint16Array(OFstatic_cast(Uint32, arraySize), array);
     if (cond.bad())
     {
@@ -644,6 +659,7 @@ OFCondition Image2Dcm::readAndInsertPixelDataFirstFrame(
       return cond;
     }
     m_output_buffer = OFreinterpret_cast(char *, array);
+    m_output_buffer_size = arraySize * 2;
     memcpy(array, pixData, m_frameLength);
     delete[] pixData;
   }
@@ -838,7 +854,18 @@ OFCondition Image2Dcm::readAndInsertPixelDataNextFrame(
       return cond;
     }
 
-    char *array = m_output_buffer + m_frameLength * (frameNumber - 1);
+    /* make sure that the frame fits into the buffer allocated by convertFirstFrame(),
+     * i.e. that the caller does not pass a frame number larger than the number of
+     * frames announced there (again computed in 64 bits, see convertFirstFrame())
+     */
+    const Uint64 frameOffset = OFstatic_cast(Uint64, m_frameLength) * (frameNumber - 1);
+    if (frameOffset + m_frameLength > m_output_buffer_size)
+    {
+      cond = makeOFCondition(OFM_dcmdata, 18, OF_error, "Image2Dcm: frame number larger than the number of frames the output buffer was allocated for");
+      delete[] pixData;
+      return cond;
+    }
+    char *array = m_output_buffer + OFstatic_cast(size_t, frameOffset);
     memcpy(array, pixData, m_frameLength);
     delete[] pixData;
   }
