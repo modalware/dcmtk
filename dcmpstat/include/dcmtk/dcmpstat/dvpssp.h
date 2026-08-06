@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1999-2022, OFFIS e.V.
+ *  Copyright (C) 1999-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -121,12 +121,21 @@ class DCMTK_DCMPSTAT_EXPORT DVPSStoredPrint
 
   /** sets the image display format to 'STANDARD\\columns,rows'.
    *  The caller must make sure that the column and row values are
-   *  valid for the selected printer.
+   *  valid for the selected printer.  The number of image boxes, i.e. the
+   *  product of both values, must not exceed maximumImageBoxes.
    *  @param columns number of columns
    *  @param rows number of rows
    *  @return EC_Normal if successful, an error code otherwise.
    */
   OFCondition setImageDisplayFormat(unsigned long columns, unsigned long rows);
+
+  /** the largest number of image boxes that an image display format may request.
+   *  One image box object is created for each of them, so an image display format
+   *  received from a remote application has to be limited.  The value of 1000 is
+   *  far beyond any layout that can be printed on a sheet of film; the largest one
+   *  in the example printer configurations of this toolkit uses 36 image boxes.
+   */
+  static const unsigned long maximumImageBoxes;
 
   /** sets the (optional) film size ID.
    *  @param value new attribute value, may be NULL.

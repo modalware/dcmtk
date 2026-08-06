@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1998-2024, OFFIS e.V.
+ *  Copyright (C) 1998-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -242,6 +242,9 @@ void DVPSStoredPrint::invalidateCache()
   currentNumRows=0;
 }
 
+const unsigned long DVPSStoredPrint::maximumImageBoxes = 1000;
+
+
 void DVPSStoredPrint::updateCache()
 {
   if (currentValuesValid) return;
@@ -255,9 +258,20 @@ void DVPSStoredPrint::updateCache()
 
     if (2==sscanf(format, "%lu,%lu", &columns, &rows))
     {
-      currentNumCols = columns;
-      currentNumRows = rows;
-      if ((columns > 0)&&(rows > 0)) currentValuesValid = OFTrue;
+      /* one image box object is created for each of the boxes, and the values are
+       * determined by the sender, so an unreasonably large layout is not accepted
+       */
+      if ((columns > 0) && (rows > 0) &&
+          (columns <= maximumImageBoxes) && (rows <= maximumImageBoxes) &&
+          (columns * rows <= maximumImageBoxes))
+      {
+        currentNumCols = columns;
+        currentNumRows = rows;
+        currentValuesValid = OFTrue;
+      } else {
+        DCMPSTAT_WARN("image display format '" << aString.c_str() << "' requests more than "
+          << maximumImageBoxes << " image boxes");
+      }
     } else {
       DCMPSTAT_WARN("cannot parse image display format '" << aString.c_str() << "'");
     }
@@ -928,6 +942,9 @@ OFCondition DVPSStoredPrint::setInstanceUID(const char *uid)
 OFCondition DVPSStoredPrint::setImageDisplayFormat(unsigned long columns, unsigned long rows)
 {
   if ((columns==0)||(rows==0)) return EC_IllegalCall;
+  /* see the comment on maximumImageBoxes in the header file */
+  if ((columns > maximumImageBoxes) || (rows > maximumImageBoxes) ||
+      (columns * rows > maximumImageBoxes)) return EC_IllegalCall;
   char newFormat[80];
   OFStandard::snprintf(newFormat, sizeof(newFormat), "STANDARD\\%lu,%lu", columns, rows);
 
