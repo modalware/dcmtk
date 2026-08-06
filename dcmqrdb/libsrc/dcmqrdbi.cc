@@ -2585,6 +2585,23 @@ OFCondition DcmQueryRetrieveIndexDatabaseHandle::checkupinStudyDesc(StudyDescRec
 
     OFCondition cond;
 
+    /** If the study is not registered yet and there is no free entry left,
+     *  matchStudyUIDInStudyDesc() returns the number of entries. That value must
+     *  not be used as an index, so an entry is freed first. An image that does not
+     *  fit into a study at all is rejected before that, because it would be
+     *  rejected below anyway and no existing study should be deleted for it.
+     */
+
+    if ( s > ( handle_ -> maxStudiesAllowed - 1 ) ) {
+    if ( imageSize > handle_ -> maxBytesPerStudy ) {
+#ifdef DEBUG
+        DCMQRDB_DEBUG("checkupinStudyDesc: imageSize = " << imageSize << " too large");
+#endif
+        return ( QR_EC_IndexDatabaseError ) ;
+    }
+    s = deleteOldestStudy(pStudyDesc) ;
+    }
+
     /** If Study already exists
      */
 
@@ -2620,8 +2637,6 @@ OFCondition DcmQueryRetrieveIndexDatabaseHandle::checkupinStudyDesc(StudyDescRec
 #endif
         return ( QR_EC_IndexDatabaseError ) ;
     }
-    if ( s > ( handle_ -> maxStudiesAllowed - 1 ) )
-        s = deleteOldestStudy(pStudyDesc) ;
 
     }
 
@@ -2658,7 +2673,12 @@ OFCondition DcmQueryRetrieveIndexDatabaseHandle::removeDuplicateImage(
     studyIdx = matchStudyUIDInStudyDesc (pStudyDesc, (char*)StudyInstanceUID,
                         (int)(handle_ -> maxStudiesAllowed)) ;
 
-    if ( pStudyDesc[studyIdx].NumberofRegistratedImages == 0 ) {
+    /* If the study is not registered yet and there is no free entry left,
+     * matchStudyUIDInStudyDesc() returns the number of entries. That value must not
+     * be used as an index, and an unregistered study cannot have any images anyway.
+     */
+    if ( ( studyIdx >= handle_ -> maxStudiesAllowed ) ||
+         ( pStudyDesc[studyIdx].NumberofRegistratedImages == 0 ) ) {
     /* no study images, cannot be any old images */
     return EC_Normal;
     }
