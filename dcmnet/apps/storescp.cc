@@ -1800,6 +1800,9 @@ struct StoreCallbackData
   OFString imageFileName;
   DcmFileFormat* dcmff;
   T_ASC_Association* assoc;
+  /// indicates whether the object of the current C-STORE request has been stored
+  /// successfully, i.e. whether the name of an output file has been recorded for it
+  OFBool objectStored;
 };
 
 
@@ -1884,6 +1887,10 @@ storeSCPCallback(
 
     // remember callback data
     StoreCallbackData *cbdata = OFstatic_cast(StoreCallbackData *, callbackData);
+
+    // the caller needs to know whether the object has really been stored before it
+    // acts on the output file. Any early return below means that it has not been.
+    cbdata->objectStored = OFFalse;
 
     // Concerning the following line: an appropriate status code is already set in the resp structure,
     // it need not be success. For example, if the caller has already detected an out of resources problem
@@ -2131,6 +2138,8 @@ storeSCPCallback(
       // able to perform the placeholder substitution in executeOnReception()
       outputFileNameArray.push_back(OFStandard::getFilenameFromPath(tmpStr, cbdata->imageFileName));
     }
+
+    cbdata->objectStored = (rsp->DimseStatus == STATUS_Success);
   }
 }
 
@@ -2259,6 +2268,7 @@ static OFCondition storeSCP(
   callbackData.imageFileName = imageFileName;
   DcmFileFormat dcmff;
   callbackData.dcmff = &dcmff;
+  callbackData.objectStored = OFFalse;
 
   // store SourceApplicationEntityTitle in metaheader
   if (assoc && assoc->params)
@@ -2309,8 +2319,12 @@ static OFCondition storeSCP(
 #endif
 
   // if everything was successful so far and option --exec-on-reception is set,
-  // we want to execute a certain command which was passed to the application
-  if( cond.good() && opt_execOnReception != NULL )
+  // we want to execute a certain command which was passed to the application.
+  // The condition being good only means that the DIMSE exchange itself worked, so
+  // the object could still have been rejected. In that case no output file has been
+  // written for this request, and the command would refer to the file of an earlier
+  // one, which could even have been received from a different peer.
+  if( cond.good() && callbackData.objectStored && opt_execOnReception != NULL )
     executeOnReception();
 
   // if everything was successful so far, go ahead and handle possible end-of-study events
@@ -2384,9 +2398,14 @@ static void executeOnReception()
 
     // perform substitution for placeholder #f; note that outputFileNameArray.back()
     // always contains the name of the file (without path) which was written last.
+    // The array is only empty if no object has been stored at all, in which case the
+    // caller should not have called this function.
     // Note: We do not enclose this in quotes because it may be used as part of a path expression.
-    OFString outputFileName = outputFileNameArray.back();
-    cmd = replaceChars( cmd, OFString(FILENAME_PLACEHOLDER), outputFileName );
+    if( !outputFileNameArray.empty() )
+    {
+      OFString outputFileName = outputFileNameArray.back();
+      cmd = replaceChars( cmd, OFString(FILENAME_PLACEHOLDER), outputFileName );
+    }
   }
 
   // perform substitution for placeholder #a.
