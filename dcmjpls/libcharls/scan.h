@@ -227,11 +227,11 @@ public:
 		// table lookup to valid indices and fall back to the generic decoder
 		// otherwise (the tables for k >= 8 are empty anyway, so this yields the
 		// same result already produced for those k).
-		const Code code = (k < 16) ? decodingTables[k].Get(STRATEGY::PeekByte()) : Code(0, 0);
-		if (code.GetLength() != 0)
+		const Code *code = (k < 16) ? &decodingTables[k].Get(STRATEGY::PeekByte()) : OFnullptr;
+		if (code && code->GetLength() != 0)
 		{
-			STRATEGY::Skip(code.GetLength());
-			ErrVal = code.GetValue();
+			STRATEGY::Skip(code->GetLength());
+			ErrVal = code->GetValue();
 			ASSERT(ABS(ErrVal) < 65535);
 		}
 		else
