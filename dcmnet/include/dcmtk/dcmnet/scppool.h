@@ -158,11 +158,19 @@ public:
   virtual size_t numThreads(const OFBool onlyBusy);
 
   /** Listen for incoming association requests. For each incoming request, a
-   *  new thread is started if number of maximum threads is not reached yet.
-   *  @return DUL_NOASSOCIATIONREQUEST if no connection is requested during
-   *          timeout. Returns other error code if serious error occurs during
-   *          listening. Will not return EC_Normal since listens forever if
-   *          no timeout occurs.
+   *  new worker thread is started if the number of maximum threads is not
+   *  reached yet, otherwise the request is refused ("local limit exceeded").
+   *  Errors while handling a single connection request (e.g.\ temporary
+   *  resource shortage when creating a worker thread) lead to a refusal of
+   *  that request ("temporary congestion") but do not stop the server.
+   *  The method only returns after stopAfterCurrentAssociations() has been
+   *  called (or if network initialization failed). Note that with the
+   *  default blocking connection mode a stop request only takes effect when
+   *  the next connection request arrives; use non-blocking mode (see
+   *  DcmSCPConfig::setConnectionBlockingMode()) together with a connection
+   *  timeout for a pool that should be stoppable at any time.
+   *  @return The error code from network initialization if that failed,
+   *          EC_Normal otherwise.
    */
   virtual OFCondition listen();
 
@@ -174,9 +182,11 @@ public:
    */
   virtual DcmSCPConfig& getConfig();
 
-  /** If enabled, the pool will return from listening for incoming requests
-   *  as soon as the last worker is idle, i.e.\ no worker is handling a DICOM
-   *  association any more.
+  /** Request the pool to stop listening for incoming requests. The listen
+   *  loop will exit when the current call waiting for a connection request
+   *  returns (see listen() about blocking vs.\ non-blocking mode). Workers
+   *  that are still handling an association finish their work; the
+   *  destructor waits for all of them to terminate.
    */
   virtual void stopAfterCurrentAssociations();
 
@@ -236,7 +246,7 @@ private:
   {
     /// Listen for new connections
     LISTEN,
-    /// Reserved for later use
+    /// Stop listening after the current call waiting for a connection returns
     STOP,
     /// Shutting down worker threads
     SHUTDOWN

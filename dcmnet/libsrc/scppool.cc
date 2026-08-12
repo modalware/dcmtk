@@ -81,8 +81,10 @@ OFCondition DcmBaseSCPPool::listen()
     return cond;
   }
 
-  /* As long as all is fine (or we have been to busy handling last connection request) keep listening */
-  while ( getRunMode() == LISTEN && ( cond.good() || (cond == NET_EC_SCPBusy) ) )
+  /* Keep listening until we are asked to stop. Errors while handling a
+   * single connection request are considered transient, i.e. the affected
+   * association is refused but the server keeps running. */
+  while ( getRunMode() == LISTEN )
   {
     // Join and delete worker threads that have finished their association
     reapFinishedWorkers();
@@ -109,7 +111,10 @@ OFCondition DcmBaseSCPPool::listen()
     {
       cond = runAssociation(assoc, sharedConfig);
 
-      /* If anything goes wrong running association: Refuse it */
+      /* If anything goes wrong running the association: Refuse it and keep
+       * listening. All errors that can occur here (all worker slots busy,
+       * memory exhaustion, thread creation failure) are transient and must
+       * not bring down the server. */
       if (cond.bad())
       {
         if (cond == NET_EC_SCPBusy)
@@ -118,6 +123,8 @@ OFCondition DcmBaseSCPPool::listen()
         }
         else
         {
+          DCMNET_WARN("DcmBaseSCPPool: Cannot start worker thread for incoming association ("
+              << cond.text() << "), refusing association");
           rejectAssociation(assoc, ASC_REASON_SP_PRES_TEMPORARYCONGESTION);
         }
         dropAndDestroyAssociation(assoc);
@@ -143,14 +150,10 @@ OFCondition DcmBaseSCPPool::listen()
   }
   // Log why we left the listen loop
   const runmode mode = getRunMode();
-  if (cond.bad())
-    DCMNET_DEBUG("DcmBaseSCPPool: Leaving listen loop due to error: " << cond.text());
-  else if (cond == NET_EC_SCPBusy)
-    DCMNET_DEBUG("DcmBaseSCPPool: Leaving listen loop due to too many concurrent connections (busy).");
-  else if (mode == STOP)
+  if (mode == STOP)
     DCMNET_DEBUG("DcmBaseSCPPool: Leaving listen loop due to stop request.");
   else
-    DCMNET_DEBUG("DcmBaseSCPPool: Leaving listen loop, result: " << cond.text() << " (runMode: " << mode << ")");
+    DCMNET_DEBUG("DcmBaseSCPPool: Leaving listen loop (runMode: " << mode << ")");
 
   finishListening();
 
