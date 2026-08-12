@@ -55,19 +55,11 @@ DcmBaseSCPPool::~DcmBaseSCPPool()
     DCMNET_DEBUG("DcmBaseSCPPool: Destructor called, waiting for runMode to become SHUTDOWN (currently " << getRunMode() << ")");
     OFStandard::forceSleep(1);
   }
-  DCMNET_DEBUG("DcmBaseSCPPool: Destructor called, cleaning up " << m_workersIdle.size() << " idle worker threads");
-  // Now all workers must be in idle list which will be joined and deleted now.
-  // Since we are in SHUTDOWN mode, no other thread can modify the lists anymore.
-  m_criticalSection.lock();
-  size_t count = 1;
-  for (OFListIterator(DcmBaseSCPWorker*) it = m_workersIdle.begin(); it != m_workersIdle.end(); ++it)
-  {
-    DCMNET_DEBUG("DcmBaseSCPPool: Joining and deleting idle worker thread " << count << ", #" << (*it)->threadID());
-    (*it)->join();
-    delete (*it);
-    count++;
-  }
-  m_criticalSection.unlock();
+  DCMNET_DEBUG("DcmBaseSCPPool: Destructor called, cleaning up " << m_workersIdle.size() << " finished worker threads");
+  // Now all workers must be in the list of finished workers which will be
+  // joined and deleted now. Since we are in SHUTDOWN mode, no other thread
+  // can modify the lists anymore.
+  reapFinishedWorkers();
   DCMNET_DEBUG("DcmBaseSCPPool: Destructor finished");
 }
 
@@ -92,6 +84,8 @@ OFCondition DcmBaseSCPPool::listen()
   /* As long as all is fine (or we have been to busy handling last connection request) keep listening */
   while ( getRunMode() == LISTEN && ( cond.good() || (cond == NET_EC_SCPBusy) ) )
   {
+    // Join and delete worker threads that have finished their association
+    reapFinishedWorkers();
     // Reset status
     cond = EC_Normal;
     // Every incoming connection is handled in a new association object
@@ -224,68 +218,45 @@ void DcmBaseSCPPool::setMaxThreads(const Uint16 maxWorkers)
 OFCondition DcmBaseSCPPool::runAssociation(T_ASC_Association *assoc,
                                            const DcmSharedSCPConfig& sharedConfig)
 {
-  /* Try to find idle worker thread */
   OFCondition result = EC_Normal;
   DcmBaseSCPWorker *chosen = NULL;
-  OFBool isNewWorker = OFFalse;
 
-  /* Do we have idle worker threads that can handle the association? */
+  /* Check whether there is a free slot for another worker thread. Each
+   * worker thread handles a single association and terminates afterwards;
+   * finished workers are joined and deleted by the listen loop, so the
+   * busy list alone reflects the number of active connections. */
   m_criticalSection.lock();
-  if (m_workersIdle.empty())
+  if (m_workersBusy.size() >= m_maxWorkers)
   {
-    if (m_workersBusy.size() >= m_maxWorkers)
-    {
-      DCMNET_DEBUG("DcmBaseSCPPool: Maximum number of busy worker threads reached (" << m_maxWorkers << "), cannot handle incoming association");
-      /* No idle workers and maximum of busy workers reached? Return busy */
-      result = NET_EC_SCPBusy;
-    }
-    else /* Else we can produce another worker */
-    {
-      DCMNET_DEBUG("DcmBaseSCPPool: Starting new DcmSCP worker thread");
-      DcmBaseSCPWorker* const worker = createSCPWorker();
-      if (!worker) /* Oops, we cannot allocate a new worker thread */
-      {
-        result = EC_MemoryExhausted;
-      }
-      else /* Configure worker thread */
-      {
-        m_workersBusy.push_back(worker);
-        worker->setSharedConfig(sharedConfig);
-        chosen = worker;
-        isNewWorker = OFTrue;
-        DCMNET_DEBUG("DcmBaseSCPPool: Created new worker thread, now " << m_workersBusy.size() << " busy threads total");
-      }
-    }
+    DCMNET_DEBUG("DcmBaseSCPPool: Maximum number of busy worker threads reached (" << m_maxWorkers << "), cannot handle incoming association");
+    result = NET_EC_SCPBusy;
   }
-  /* Else we have idle workers, use one of them */
-  else
+  else /* Else we can produce another worker */
   {
-    DCMNET_DEBUG("DcmBaseSCPPool: Reusing existing idle DcmSCP worker thread #" << m_workersIdle.front()->threadID());
-    chosen = m_workersIdle.front();
-    m_workersIdle.pop_front();
-    m_workersBusy.push_back(chosen);
-    result = EC_Normal;
+    DCMNET_DEBUG("DcmBaseSCPPool: Starting new DcmSCP worker thread");
+    DcmBaseSCPWorker* const worker = createSCPWorker();
+    if (!worker) /* Oops, we cannot allocate a new worker thread */
+    {
+      result = EC_MemoryExhausted;
+    }
+    else /* Configure worker thread */
+    {
+      m_workersBusy.push_back(worker);
+      worker->setSharedConfig(sharedConfig);
+      chosen = worker;
+      DCMNET_DEBUG("DcmBaseSCPPool: Created new worker thread, now " << m_workersBusy.size() << " busy threads total");
+    }
   }
   m_criticalSection.unlock();
 
-  /* Hand association to worker */
+  /* Hand association to worker and start its thread */
   if (result.good())
   {
     result = chosen->setAssociation(assoc);
-  }
-  /* Start the thread */
-  if (isNewWorker && result.good())
-  {
-     if (chosen->start() != 0)
-     {
-       result = NET_EC_CannotStartSCPThread;
-     }
-  }
-  else if (result.good())
-  {
-    // If we reuse an existing worker thread, it might be waiting for an association.
-    // Wake it up now.
-    chosen->rerun();
+    if (result.good() && (chosen->start() != 0))
+    {
+      result = NET_EC_CannotStartSCPThread;
+    }
   }
   /* Return to listen loop */
   return result;
@@ -336,12 +307,33 @@ void DcmBaseSCPPool::notifyWorkerDone(DcmBaseSCPPool::DcmBaseSCPWorker* thread,
   {
     DCMNET_DEBUG("DcmBaseSCPPool: Worker thread #" << thread->threadID() << " finished successfully.");
   }
-  // Move thread from busy to idle lists
+  // Move thread from busy list to the list of finished workers. Remove it
+  // from the finished list first so that the worker can never end up in that
+  // list twice (which would lead to a double delete when reaping).
   m_workersBusy.remove(thread);
+  m_workersIdle.remove(thread);
   m_workersIdle.push_back(thread);
-  DCMNET_DEBUG("DcmBaseSCPPool: Put worker thread #" << thread->threadID() << " back to idle list; now "
-              << m_workersBusy.size() << " busy and " << m_workersIdle.size() << " idle worker threads.");
+  DCMNET_DEBUG("DcmBaseSCPPool: Put worker thread #" << thread->threadID() << " into finished list; now "
+              << m_workersBusy.size() << " busy and " << m_workersIdle.size() << " finished worker threads.");
   m_criticalSection.unlock();
+}
+
+// ----------------------------------------------------------------------------
+
+void DcmBaseSCPPool::reapFinishedWorkers()
+{
+  // Take over the list of finished workers with the mutex held, but join
+  // and delete the workers outside the critical section.
+  OFList<DcmBaseSCPWorker*> finished;
+  m_criticalSection.lock();
+  finished.splice(finished.begin(), m_workersIdle);
+  m_criticalSection.unlock();
+  for (OFListIterator(DcmBaseSCPWorker*) it = finished.begin(); it != finished.end(); ++it)
+  {
+    DCMNET_DEBUG("DcmBaseSCPPool: Joining and deleting finished worker thread #" << (*it)->threadID());
+    (*it)->join();
+    delete (*it);
+  }
 }
 
 // ----------------------------------------------------------------------------
@@ -431,6 +423,8 @@ void DcmBaseSCPPool::DcmBaseSCPWorker::exit()
 
 void DcmBaseSCPPool::DcmBaseSCPWorker::rerun()
 {
+  // No longer called by the pool: each worker thread handles exactly one
+  // association and terminates afterwards (see DcmBaseSCPPool::runAssociation).
   DcmBaseSCPPool::DcmBaseSCPWorker::run();
 }
 

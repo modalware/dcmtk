@@ -83,7 +83,11 @@ public:
        */
       virtual void exit();
 
-      /** Restart the worker thread */
+      /** Run the worker again in the calling thread.
+       *  @deprecated This method is no longer called by the pool: each
+       *    worker thread handles exactly one association and terminates
+       *    afterwards. Calling it executes run() in the caller's thread.
+       */
       virtual void rerun();
 
     protected:
@@ -130,7 +134,9 @@ public:
   // Needed to keep MS VC6 happy
   friend class DcmBaseSCPWorker;
 
-  /** Virtual destructor, frees internal memory.
+  /** Virtual destructor, frees internal memory. Note that the destructor
+   *  blocks until listen() has returned (see stopAfterCurrentAssociations())
+   *  and all worker threads have finished their associations.
    */
   virtual ~DcmBaseSCPPool();
 
@@ -240,7 +246,8 @@ private:
   OFMutex m_criticalSection;
   /// List of all workers running a connection
   OFList<DcmBaseSCPWorker*> m_workersBusy;
-  /// List of all workers being idle, i.e.\ not running a connection
+  /// List of all workers that have finished their connection and are waiting
+  /// to be joined and deleted (see reapFinishedWorkers())
   OFList<DcmBaseSCPWorker*> m_workersIdle;
 
   /// SCP configuration to be used by pool and all workers
@@ -264,6 +271,13 @@ private:
 
   /// Set m_runMode to SHUTDOWN on return from listen function
   void finishListening();
+
+  /** Join and delete all worker threads that have finished handling their
+   *  association. Called regularly from the listen loop and from the
+   *  destructor, so that resources of terminated threads are reclaimed
+   *  while the pool keeps running.
+   */
+  void reapFinishedWorkers();
 
   /** Thread-safe read of the current run mode, guarded by m_criticalSection.
    *  @return the pool's current run mode.
