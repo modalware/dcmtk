@@ -163,15 +163,17 @@ OFTEST_FLAGS(dcmnet_scp_pool, EF_Slow)
     for (OFVector<TestSCU*>::iterator it3 = scus.begin(); it3 != scus.end(); ++it3)
     {
         OFCondition scuResult;
-        (*it3)->getResult(scuResult);
         (*it3)->join();
+        (*it3)->getResult(scuResult);
         delete *it3;
         (*it3) = NULL;
         OFCHECK(scuResult.good());
     }
     scus.clear();
 
-    // Second round to check whether thread re-use works inside the pool
+    // Second round to check whether the pool accepts a new generation of
+    // associations after the first generation of workers has finished
+    scus.resize(NUM_THREADS, NULL);
     for (OFVector<TestSCU*>::iterator it4 = scus.begin(); it4 != scus.end(); ++it4)
     {
         *it4 = new TestSCU;
@@ -189,9 +191,9 @@ OFTEST_FLAGS(dcmnet_scp_pool, EF_Slow)
     for (OFVector<TestSCU*>::iterator it3 = scus.begin(); it3 != scus.end(); ++it3)
     {
         OFCondition scuResult;
+        (*it3)->join();
         (*it3)->getResult(scuResult);
         OFCHECK(scuResult.good());
-        (*it3)->join();
         delete *it3;
     }
 
