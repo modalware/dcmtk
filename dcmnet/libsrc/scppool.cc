@@ -190,7 +190,10 @@ void DcmBaseSCPPool::setRunMode(const runmode mode)
 
 Uint16 DcmBaseSCPPool::getMaxThreads()
 {
-  return m_maxWorkers;
+  m_criticalSection.lock();
+  const Uint16 result = m_maxWorkers;
+  m_criticalSection.unlock();
+  return result;
 }
 
 // ----------------------------------------------------------------------------
@@ -213,7 +216,9 @@ size_t DcmBaseSCPPool::numThreads(const OFBool onlyBusy)
 
 void DcmBaseSCPPool::setMaxThreads(const Uint16 maxWorkers)
 {
+  m_criticalSection.lock();
   m_maxWorkers = maxWorkers;
+  m_criticalSection.unlock();
 }
 
 // ----------------------------------------------------------------------------
@@ -297,7 +302,6 @@ void DcmBaseSCPPool::dropAndDestroyAssociation(T_ASC_Association *assoc)
     ASC_dropAssociation( assoc );
     ASC_destroyAssociation( &assoc );
   }
-  assoc = NULL;
 }
 
 // ----------------------------------------------------------------------------

@@ -252,7 +252,8 @@ private:
     SHUTDOWN
   };
 
-  /// Mutex that guards the list of busy and idle workers
+  /// Mutex that guards the worker lists, the maximum number of workers and
+  /// the run mode
   OFMutex m_criticalSection;
   /// List of all workers running a connection
   OFList<DcmBaseSCPWorker*> m_workersBusy;
