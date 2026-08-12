@@ -260,6 +260,17 @@ OFCondition DcmBaseSCPPool::runAssociation(T_ASC_Association *assoc,
     {
       result = NET_EC_CannotStartSCPThread;
     }
+    if (result.bad())
+    {
+      /* The worker thread never ran: Remove the worker from the busy list
+       * and delete it so that its pool slot does not leak and the
+       * destructor does not wait for it forever. The caller refuses and
+       * destroys the association. */
+      m_criticalSection.lock();
+      m_workersBusy.remove(chosen);
+      m_criticalSection.unlock();
+      delete chosen;
+    }
   }
   /* Return to listen loop */
   return result;

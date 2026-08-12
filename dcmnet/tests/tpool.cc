@@ -26,6 +26,7 @@
 
 #include "dcmtk/ofstd/oftest.h"
 #include "dcmtk/dcmnet/scppool.h"
+#include "dcmtk/dcmnet/scpthrd.h"
 #include "dcmtk/dcmnet/scu.h"
 #include "dcmtk/ofstd/ofthread.h"
 #include "dcmtk/ofstd/ofstd.h"
@@ -307,6 +308,133 @@ OFTEST_FLAGS(dcmnet_scp_pool_concurrency, EF_Slow)
     pool.stopAfterCurrentAssociations();
     pool.join();
     OFCHECK(pool.result.good());
+}
+
+
+/** Pool whose workers can be made to fail in a controlled way, simulating
+ *  transient errors like thread creation failure or memory exhaustion.
+ */
+struct FailingPool : DcmBaseSCPPool, OFThread
+{
+    OFCondition result;
+    /// If set, the next call to a worker's setAssociation() fails
+    volatile OFBool failNextSetAssociation;
+    /// If set, the next call to createSCPWorker() returns NULL
+    volatile OFBool failNextCreateWorker;
+
+    FailingPool()
+      : result(EC_IllegalCall), failNextSetAssociation(OFFalse),
+        failNextCreateWorker(OFFalse)
+    {
+    }
+
+    struct FailingWorker : DcmBaseSCPPool::DcmBaseSCPWorker, private DcmThreadSCP
+    {
+        FailingPool& m_failingPool;
+
+        FailingWorker(FailingPool& pool)
+          : DcmBaseSCPPool::DcmBaseSCPWorker(pool), DcmThreadSCP(),
+            m_failingPool(pool)
+        {
+        }
+
+        virtual OFCondition setSharedConfig(const DcmSharedSCPConfig& config)
+        {
+            return DcmThreadSCP::setSharedConfig(config);
+        }
+
+        virtual OFBool busy()
+        {
+            return DcmThreadSCP::isConnected();
+        }
+
+        virtual OFCondition setAssociation(T_ASC_Association* assoc)
+        {
+            if (m_failingPool.failNextSetAssociation)
+            {
+                m_failingPool.failNextSetAssociation = OFFalse;
+                return NET_EC_AlreadyConnected; // simulate transient failure
+            }
+            return DcmBaseSCPPool::DcmBaseSCPWorker::setAssociation(assoc);
+        }
+
+        virtual OFCondition workerListen(T_ASC_Association* const assoc)
+        {
+            OFCondition workerResult = DcmThreadSCP::run(assoc);
+            DcmThreadSCP::dropAndDestroyAssociation();
+            return workerResult;
+        }
+    };
+
+    virtual DcmBaseSCPPool::DcmBaseSCPWorker* createSCPWorker()
+    {
+        if (failNextCreateWorker)
+        {
+            failNextCreateWorker = OFFalse;
+            return NULL; // simulate memory exhaustion
+        }
+        return new FailingWorker(*this);
+    }
+
+protected:
+
+    void run()
+    {
+        result = listen();
+    }
+};
+
+
+/* Regression test: transient errors while starting a worker for an incoming
+ * association (thread creation failure, memory exhaustion, ...) must lead to
+ * a refusal of that single association only. In earlier versions, such an
+ * error made listen() return (the server was permanently dead) and left the
+ * failed worker in the busy list forever, so that the pool destructor never
+ * returned (the whole test binary would hang here).
+ */
+OFTEST_FLAGS(dcmnet_scp_pool_error_resilience, EF_Slow)
+{
+    const Uint16 port = 11114;
+    FailingPool pool;
+    DcmSCPConfig& config = pool.getConfig();
+
+    config.setAETitle("PoolTestSCP");
+    config.setPort(port);
+    config.setConnectionBlockingMode(DUL_NOBLOCK);
+    config.setConnectionTimeout(1);
+    pool.setMaxThreads(5);
+    OFList<OFString> xfers;
+    xfers.push_back(UID_LittleEndianExplicitTransferSyntax);
+    xfers.push_back(UID_LittleEndianImplicitTransferSyntax);
+    config.addPresentationContext(UID_VerificationSOPClass, xfers);
+
+    pool.start();
+    // "ensure" the pool is initialized before any SCU starts connecting
+    OFStandard::forceSleep(5);
+
+    // Sanity check: the pool works
+    OFCHECK(syncEcho(port).good());
+
+    // A worker that cannot take over the association must only affect the
+    // association it was created for
+    pool.failNextSetAssociation = OFTrue;
+    OFCHECK(syncEcho(port).bad());  // this one is refused ...
+    OFCHECK(syncEcho(port).good()); // ... but the server keeps running
+
+    // The same holds if the worker cannot even be allocated
+    pool.failNextCreateWorker = OFTrue;
+    OFCHECK(syncEcho(port).bad());
+    OFCHECK(syncEcho(port).good());
+
+    // The failed attempts must not leak any worker slots
+    OFStandard::forceSleep(1);
+    OFCHECK(pool.numThreads(OFTrue /* onlyBusy */) == 0);
+
+    pool.stopAfterCurrentAssociations();
+    pool.join();
+    OFCHECK(pool.result.good());
+    // Note: the pool destructor runs at the end of this scope; before the
+    // fix it would hang forever waiting for the stranded workers
 }
 
 #endif // WITH_THREADS
