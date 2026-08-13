@@ -41,7 +41,7 @@
  *  An A-ASSOCIATE-RQ PDU is structured as:
  *      offset 0   : PDU type            (1 byte,  0x01)
  *      offset 1   : reserved            (1 byte,  0x00)
- *      offset 2   : PDU length          (4 bytes, big-endian) — counts only
+ *      offset 2   : PDU length          (4 bytes, big-endian) - counts only
  *                                        the bytes AFTER this field, i.e. it
  *                                        excludes the 6-byte preamble above.
  *      offset 6   : protocol version    (2 bytes)
@@ -55,7 +55,7 @@
  *  it) share a 4-byte sub-PDU header:
  *      byte 0     : item type           (1 byte)
  *      byte 1     : reserved            (1 byte, 0x00)
- *      byte 2-3   : item length         (2 bytes, big-endian) — counts only
+ *      byte 2-3   : item length         (2 bytes, big-endian) - counts only
  *                                        the bytes AFTER this field.
  *
  *  A SOP Class Extended Negotiation sub-item (item type 0x56) has, after that
@@ -162,7 +162,7 @@ OFTEST(dcmnet_parseAssociate_extNeg_truncated)
     // One truncated sub-item: claims itemLength = EXT_NEG_MIN_BODY_BYTES but
     // delivers only EXT_NEG_MIN_SUBITEM_BYTES - 1 bytes, so parseExtNeg trips
     // availData < 6 AFTER the outer loop has already pushed `validItems`
-    // complete sub-items into extNegList — that is the leaked set.
+    // complete sub-items into extNegList - that is the leaked set.
     *p++ = DUL_TYPESOPCLASSEXTENDEDNEGOTIATION;  // type    (1)
     *p++ = 0x00;                                 // reserved (1)
     *p++ = 0x00; *p++ = 0x02;                    // itemLength = 2 (2)

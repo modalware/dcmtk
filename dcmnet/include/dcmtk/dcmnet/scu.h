@@ -726,7 +726,7 @@ public:
      *  @param requestedSopInstanceUID  [in]  The requested SOP Instance UID
      *  @param attributeIdentifierList  [in]  List of attribute tags to retrieve. If empty, no
      *                                        Attribute Identifier List is sent and all attributes
-     *                                        are assumed per PS3.7 §10.1.2.1.5.
+     *                                        are assumed per PS3.7 Section 10.1.2.1.5.
      *  @param attributeList            [out] Pointer to the attribute list returned by the SCP.
      *                                        May be NULL if the SCP returns no dataset.
      *                                        The caller is responsible for deleting the returned object.

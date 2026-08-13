@@ -87,7 +87,7 @@
  *       into m_Rules (in-place population path used by DcmIODCommon).
  *  See any existing resetRules() implementation for a concrete example.
  *
- *  Exception — rules that depend on constructor arguments:
+ *  Exception - rules that depend on constructor arguments:
  *  If the rule set varies between instances of the same class (e.g. because
  *  a constructor argument determines which rules are added, as in
  *  CodeWithModifiers), a shared static cannot be used.  In that case allocate

@@ -31,7 +31,7 @@
 
 // SOPInstanceReferenceMacro is used for these tests because it:
 //   * has two type-"1" rules (ReferencedSOPClassUID, ReferencedSOPInstanceUID)
-//   * does NOT override check() — the base IODComponent::check() is used, which
+//   * does NOT override check() - the base IODComponent::check() is used, which
 //     iterates over the rules and honours their requirement types.
 // CodeSequenceMacro was intentionally NOT chosen: its check() override performs
 // a bespoke value-presence test that ignores the rules entirely.
@@ -48,7 +48,7 @@ OFTEST(dcmiod_static_rules_cow)
 {
     SOPInstanceReferenceMacro a, b;
 
-    // Empty data → both type-"1" attributes absent → check() must fail.
+    // Empty data -> both type-"1" attributes absent -> check() must fail.
     OFCHECK(a.check(OFTrue /* quiet */).bad());
     OFCHECK(b.check(OFTrue /* quiet */).bad());
 

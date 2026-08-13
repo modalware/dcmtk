@@ -132,7 +132,7 @@ OFTEST(dcmseg_segments_add_get_labelmap)
     }
     OFCHECK(seg->getNumberOfSegments() == 5);
 
-    // Retrieve each — including segment 0
+    // Retrieve each - including segment 0
     for (Uint16 i = 0; i < 5; i++)
     {
         DcmSegment* s = seg->getSegment(i);
@@ -146,7 +146,7 @@ OFTEST(dcmseg_segments_add_get_labelmap)
 }
 
 
-// Test getSegmentNumber (reverse lookup: pointer → number)
+// Test getSegmentNumber (reverse lookup: pointer -> number)
 OFTEST(dcmseg_segments_get_segment_number)
 {
     if (!dcmDataDict.isDictionaryLoaded())
@@ -394,7 +394,7 @@ OFTEST(dcmseg_segments_compat_caching)
     const OFMap<Uint16, DcmSegment*>& map2 = seg->getSegments();
     OFCHECK(map2.size() == 2);
 
-    // Add another segment — compat map should update
+    // Add another segment - compat map should update
     OFCHECK(seg->addSegment(makeSegment("C"), num).good());
     const OFMap<Uint16, DcmSegment*>& map3 = seg->getSegments();
     OFCHECK(map3.size() == 3);

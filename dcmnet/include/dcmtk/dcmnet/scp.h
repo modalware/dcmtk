@@ -963,7 +963,7 @@ protected:
      *  @param attributeIdentifierList [out] List of attribute tags requested by the SCU.
      *                                       An empty list means no Attribute Identifier List
      *                                       was specified; all attributes are then assumed
-     *                                       per PS3.7 §10.1.2.1.5.
+     *                                       per PS3.7 Section 10.1.2.1.5.
      *  @return EC_Normal if successful, an error code otherwise
      */
     virtual OFCondition receiveNGETRequest(T_DIMSE_N_GetRQ& reqMessage,

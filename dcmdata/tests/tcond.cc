@@ -144,7 +144,7 @@ static OFCondition createTestFile(OFString& tmpFile)
     DcmUnsignedLong* ulElem = new DcmUnsignedLong(DCM_SimpleFrameList);
     ulElem->putUint32(100000);
     dset->insert(ulElem, OFTrue);
-    // UV: FileOffsetInContainer (0008,040C) — 64-bit unsigned
+    // UV: FileOffsetInContainer (0008,040C) - 64-bit unsigned
     // Uses a value larger than 32-bit to test full 64-bit range.
     DcmUnsigned64bitVeryLong* uvElem = new DcmUnsigned64bitVeryLong(DCM_FileOffsetInContainer);
     uvElem->putUint64(4294967296ULL); // 2^32
@@ -159,7 +159,7 @@ static OFCondition createTestFile(OFString& tmpFile)
     DcmSignedLong* slElem = new DcmSignedLong(DCM_IntegerNumericValue);
     slElem->putSint32(-100000);
     dset->insert(slElem, OFTrue);
-    // SV: SelectorSVValue (0072,0082) — 64-bit signed
+    // SV: SelectorSVValue (0072,0082) - 64-bit signed
     // Uses a value larger than 32-bit to test full 64-bit range.
     DcmSigned64bitVeryLong* svElem = new DcmSigned64bitVeryLong(DCM_SelectorSVValue);
     svElem->putSint64(-4294967296LL); // -(2^32)
@@ -185,28 +185,28 @@ static OFCondition createTestFile(OFString& tmpFile)
     dset->insert(atElem, OFTrue);
 
     // --- Binary VRs (Other Byte/Word/Long/VeryLong/Float/Double) ---
-    // OB: SelectorOBValue (0072,0065) — hex format "01\ff"
+    // OB: SelectorOBValue (0072,0065) - hex format "01\ff"
     DcmOtherByteOtherWord* obElem = new DcmOtherByteOtherWord(DCM_SelectorOBValue);
     obElem->putString("0a\\1b\\ff");
     dset->insert(obElem, OFTrue);
-    // OW: SelectorOWValue (0072,0069) — hex format "0000\7fff"
+    // OW: SelectorOWValue (0072,0069) - hex format "0000\7fff"
     DcmOtherByteOtherWord* owElem = new DcmOtherByteOtherWord(DCM_SelectorOWValue);
     owElem->putString("00ff\\7fff");
     dset->insert(owElem, OFTrue);
-    // OL: SelectorOLValue (0072,0075) — decimal format via DcmUnsignedLong parent
+    // OL: SelectorOLValue (0072,0075) - decimal format via DcmUnsignedLong parent
     DcmOtherLong* olElem = new DcmOtherLong(DCM_SelectorOLValue);
     olElem->putUint32(70000);
     dset->insert(olElem, OFTrue);
-    // OV: SelectorOVValue (0072,0081) — decimal format via DcmUnsigned64bitVeryLong parent
+    // OV: SelectorOVValue (0072,0081) - decimal format via DcmUnsigned64bitVeryLong parent
     // Uses a value larger than 32-bit to test full 64-bit range.
     DcmOther64bitVeryLong* ovElem = new DcmOther64bitVeryLong(DCM_SelectorOVValue);
     ovElem->putUint64(5000000000ULL);
     dset->insert(ovElem, OFTrue);
-    // OF: SelectorOFValue (0072,0067) — decimal float via DcmFloatingPointSingle parent
+    // OF: SelectorOFValue (0072,0067) - decimal float via DcmFloatingPointSingle parent
     DcmOtherFloat* ofElem = new DcmOtherFloat(DCM_SelectorOFValue);
     ofElem->putFloat32(42.5f);
     dset->insert(ofElem, OFTrue);
-    // OD: SelectorODValue (0072,0073) — decimal double via DcmFloatingPointDouble parent
+    // OD: SelectorODValue (0072,0073) - decimal double via DcmFloatingPointDouble parent
     DcmOtherDouble* odElem = new DcmOtherDouble(DCM_SelectorODValue);
     odElem->putFloat64(123.456);
     dset->insert(odElem, OFTrue);
@@ -350,7 +350,7 @@ OFTEST(dcmdata_condition_existence)
 
 
 // ============================================================
-// Test: US (Unsigned Short, 16-bit) — numeric comparison
+// Test: US (Unsigned Short, 16-bit) - numeric comparison
 // Tag: Rows (0028,0010), value: 512
 // ============================================================
 
@@ -372,7 +372,7 @@ OFTEST(dcmdata_condition_US)
 
 
 // ============================================================
-// Test: SS (Signed Short, 16-bit) — numeric comparison with negatives
+// Test: SS (Signed Short, 16-bit) - numeric comparison with negatives
 // Tag: TagAngleSecondAxis (0018,9219), value: -100
 // ============================================================
 
@@ -394,7 +394,7 @@ OFTEST(dcmdata_condition_SS)
 
 
 // ============================================================
-// Test: UL (Unsigned Long, 32-bit) — numeric comparison
+// Test: UL (Unsigned Long, 32-bit) - numeric comparison
 // Tag: SimpleFrameList (0008,1161), value: 100000
 // ============================================================
 
@@ -412,7 +412,7 @@ OFTEST(dcmdata_condition_UL)
 
 
 // ============================================================
-// Test: SL (Signed Long, 32-bit) — numeric comparison with negatives
+// Test: SL (Signed Long, 32-bit) - numeric comparison with negatives
 // Tag: IntegerNumericValue (0014,4108), value: -100000
 // ============================================================
 
@@ -430,7 +430,7 @@ OFTEST(dcmdata_condition_SL)
 
 
 // ============================================================
-// Test: UV (Unsigned Very Long, 64-bit) — numeric comparison
+// Test: UV (Unsigned Very Long, 64-bit) - numeric comparison
 // Tag: FileOffsetInContainer (0008,040C), value: 4294967296 (2^32)
 // Note: Tests full 64-bit range with values exceeding 32-bit.
 // ============================================================
@@ -449,7 +449,7 @@ OFTEST(dcmdata_condition_UV)
 
 
 // ============================================================
-// Test: SV (Signed Very Long, 64-bit) — numeric comparison
+// Test: SV (Signed Very Long, 64-bit) - numeric comparison
 // Tag: SelectorSVValue (0072,0082), value: -4294967296 (-(2^32))
 // Note: Tests full 64-bit range with values exceeding 32-bit.
 // ============================================================
@@ -468,7 +468,7 @@ OFTEST(dcmdata_condition_SV)
 
 
 // ============================================================
-// Test: FL (Float, 32-bit) — numeric comparison
+// Test: FL (Float, 32-bit) - numeric comparison
 // Tag: RecommendedDisplayFrameRateInFloat (0008,9459), value: 25.5
 // ============================================================
 
@@ -486,7 +486,7 @@ OFTEST(dcmdata_condition_FL)
 
 
 // ============================================================
-// Test: FD (Float Double, 64-bit) — numeric comparison
+// Test: FD (Float Double, 64-bit) - numeric comparison
 // Tag: AcquisitionDuration (0018,9073), value: 3.14159
 // ============================================================
 
@@ -504,7 +504,7 @@ OFTEST(dcmdata_condition_FD)
 
 
 // ============================================================
-// Test: OB (Other Byte) — hexadecimal string comparison
+// Test: OB (Other Byte) - hexadecimal string comparison
 // Tag: SelectorOBValue (0072,0065), value: "0a\1b\ff" (3 bytes)
 // OB uses hex format for putString/getOFStringArray; createCompareElement
 // passes hex through without decimal normalization.
@@ -524,7 +524,7 @@ OFTEST(dcmdata_condition_OB)
 
 
 // ============================================================
-// Test: OW (Other Word) — hexadecimal string comparison
+// Test: OW (Other Word) - hexadecimal string comparison
 // Tag: SelectorOWValue (0072,0069), value: "00ff\7fff" (2 words)
 // OW uses hex format with 4-digit groups.
 // ============================================================
@@ -543,7 +543,7 @@ OFTEST(dcmdata_condition_OW)
 
 
 // ============================================================
-// Test: OL (Other Long, 32-bit unsigned) — numeric comparison
+// Test: OL (Other Long, 32-bit unsigned) - numeric comparison
 // Tag: SelectorOLValue (0072,0075), value: 70000
 // OL inherits from DcmUnsignedLong; uses decimal putString/compare.
 // ============================================================
@@ -562,7 +562,7 @@ OFTEST(dcmdata_condition_OL)
 
 
 // ============================================================
-// Test: OV (Other 64-bit Very Long, unsigned) — numeric comparison
+// Test: OV (Other 64-bit Very Long, unsigned) - numeric comparison
 // Tag: SelectorOVValue (0072,0081), value: 5000000000
 // OV inherits from DcmUnsigned64bitVeryLong; uses decimal putString/compare.
 // Note: Tests full 64-bit range with values exceeding 32-bit.
@@ -582,7 +582,7 @@ OFTEST(dcmdata_condition_OV)
 
 
 // ============================================================
-// Test: OF (Other Float, 32-bit) — numeric comparison
+// Test: OF (Other Float, 32-bit) - numeric comparison
 // Tag: SelectorOFValue (0072,0067), value: 42.5
 // OF inherits from DcmFloatingPointSingle; uses decimal float putString/compare.
 // ============================================================
@@ -601,7 +601,7 @@ OFTEST(dcmdata_condition_OF)
 
 
 // ============================================================
-// Test: OD (Other Double, 64-bit) — numeric comparison
+// Test: OD (Other Double, 64-bit) - numeric comparison
 // Tag: SelectorODValue (0072,0073), value: 123.456
 // OD inherits from DcmFloatingPointDouble; uses decimal float putString/compare.
 // ============================================================
@@ -620,7 +620,7 @@ OFTEST(dcmdata_condition_OD)
 
 
 // ============================================================
-// Test: UN (Unknown VR) — hex comparison via numeric path
+// Test: UN (Unknown VR) - hex comparison via numeric path
 // Tag: private (0009,1010), value: "7f" (single byte)
 // UN is stored as DcmOtherByteOtherWord internally and routed
 // through checkNumberCondition() (same as OB). createCompareElement()
@@ -646,7 +646,7 @@ OFTEST(dcmdata_condition_UN)
 
 
 // ============================================================
-// Test: IS (Integer String) — goes through numeric path (isaNumber)
+// Test: IS (Integer String) - goes through numeric path (isaNumber)
 // Tag: NumberOfFrames (0028,0008), value: "10"
 //
 // KNOWN LIMITATION: IS is classified as isaNumber() and goes through
@@ -693,7 +693,7 @@ OFTEST(dcmdata_condition_IS)
 
 
 // ============================================================
-// Test: DS (Decimal String) — goes through numeric path (isaNumber)
+// Test: DS (Decimal String) - goes through numeric path (isaNumber)
 // Tag: WindowCenter (0028,1050), value: "100.5"
 //
 // KNOWN LIMITATION: DS is classified as isaNumber() and goes through
@@ -735,7 +735,7 @@ OFTEST(dcmdata_condition_DS)
 
 
 // ============================================================
-// Test: CS (Code String) — lexicographic string comparison
+// Test: CS (Code String) - lexicographic string comparison
 // Tag: Modality (0008,0060), value: "CT"
 // ============================================================
 
@@ -757,7 +757,7 @@ OFTEST(dcmdata_condition_CS)
 
 
 // ============================================================
-// Test: LO (Long String) — lexicographic string comparison
+// Test: LO (Long String) - lexicographic string comparison
 // Tag: Manufacturer (0008,0070), value: "ACME Corp"
 // ============================================================
 
@@ -775,7 +775,7 @@ OFTEST(dcmdata_condition_LO)
 
 
 // ============================================================
-// Test: PN (Person Name) — lexicographic string comparison
+// Test: PN (Person Name) - lexicographic string comparison
 // Tag: PatientName (0010,0010), value: "Doe^John"
 // ============================================================
 
@@ -793,7 +793,7 @@ OFTEST(dcmdata_condition_PN)
 
 
 // ============================================================
-// Test: DA (Date) — string comparison, safe for ordering
+// Test: DA (Date) - string comparison, safe for ordering
 // Tag: StudyDate (0008,0020), value: "20240115"
 // DA has fixed 8-char format YYYYMMDD so lexicographic ordering
 // produces correct chronological ordering.
@@ -813,7 +813,7 @@ OFTEST(dcmdata_condition_DA)
 
 
 // ============================================================
-// Test: UI (Unique Identifier) — string comparison + UID name lookup
+// Test: UI (Unique Identifier) - string comparison + UID name lookup
 // Tag: SOPClassUID (0008,0016), value: UID_CTImageStorage
 // ============================================================
 
@@ -846,7 +846,7 @@ OFTEST(dcmdata_condition_UI)
 
 
 // ============================================================
-// Test: AT (Attribute Tag) — treated as string comparison
+// Test: AT (Attribute Tag) - treated as string comparison
 // Tag: FrameIncrementPointer (0028,0009), value: (0010,0010)
 // AT is neither isaString() nor isaNumber(); the code handles it
 // explicitly in the EVR_AT branch.
@@ -908,7 +908,7 @@ OFTEST(dcmdata_condition_VM)
 
 
 // ============================================================
-// Test: Sequence wildcard [*] — condition must hold for all items
+// Test: Sequence wildcard [*] - condition must hold for all items
 // ReferencedSeriesSequence (0008,1115) with 3 items:
 //   Item 0: Rows = 256
 //   Item 1: Rows = 512

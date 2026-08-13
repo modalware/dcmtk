@@ -927,7 +927,7 @@ struct TestSCPWithMPPSSupport : TestSCP
         }
         else if (requestedTags.empty())
         {
-            // No Attribute Identifier List specified; all attributes are assumed (PS3.7 §10.1.2.1.5)
+            // No Attribute Identifier List specified; all attributes are assumed (PS3.7 Section 10.1.2.1.5)
             filteredDataset = instanceIt->second;
         }
         else

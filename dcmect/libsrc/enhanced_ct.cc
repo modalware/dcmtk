@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2019-2025, Open Connections GmbH
+ *  Copyright (C) 2019-2026, Open Connections GmbH
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation are maintained by
@@ -1201,7 +1201,7 @@ OFCondition EctEnhancedCT::readGeneric(DcmItem& dataset)
     IODImage::read(dataset);
     if (m_SynchronizationModuleEnabled)
     {
-        // Synchronization Module is type C ("Required if time synchronization was​ applied"),
+        // Synchronization Module is type C ("Required if time synchronization was applied"),
         // so we make it optional for reading to avoid warnings on the attributes, and then reset rules
         // to the default state.
         m_SynchronizationModule.makeOptional();

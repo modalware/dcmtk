@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2024-2025, Open Connections GmbH
+ *  Copyright (C) 2024-2026, Open Connections GmbH
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation are maintained by
@@ -33,16 +33,16 @@
 
 /** Class representing the Palette Color Lookup Table Module:
  *
- * Red Palette Color Lookup Table​ Descriptor (0028,1101): (US or SS, 3, 1)
- * Green Palette Color Lookup Table​ Descriptor (0028,1102): (US or SS, 3, 1)
- * Blue Palette Color Lookup Table​ Descriptor (0028,1103): (US or SS, 3, 1)
+ * Red Palette Color Lookup Table Descriptor (0028,1101): (US or SS, 3, 1)
+ * Green Palette Color Lookup Table Descriptor (0028,1102): (US or SS, 3, 1)
+ * Blue Palette Color Lookup Table Descriptor (0028,1103): (US or SS, 3, 1)
  * Palette Color Lookup Table UID (0028,1199): (UI, 1, 3)
- * Red Palette Color Lookup Table​ Data​ (0028,1201): (OW, 1-n, 1C)
- * Green Palette Color Lookup Table​ Data​ (0028,1202): (OW, 1-n, 1C)
- * Blue Palette Color Lookup Table​ Data​ (0028,1203): (OW, 1-n, 1C)
- * Segmented Red Palette Color Lookup Table​ Data​ (0028,1221): (OW, 1-n, 1C)
- * Segmented Green Palette Color Lookup Table​ Data​ (0028,1222): (OW, 1-n, 1C)
- * Segmented Blue Palette Color Lookup Table​ Data​ (0028,1223): (OW, 1-n, 1C)
+ * Red Palette Color Lookup Table Data (0028,1201): (OW, 1-n, 1C)
+ * Green Palette Color Lookup Table Data (0028,1202): (OW, 1-n, 1C)
+ * Blue Palette Color Lookup Table Data (0028,1203): (OW, 1-n, 1C)
+ * Segmented Red Palette Color Lookup Table Data (0028,1221): (OW, 1-n, 1C)
+ * Segmented Green Palette Color Lookup Table Data (0028,1222): (OW, 1-n, 1C)
+ * Segmented Blue Palette Color Lookup Table Data (0028,1223): (OW, 1-n, 1C)
  */
 class DCMTK_DCMIOD_EXPORT IODPaletteColorLUTModule : public IODModule
 {
@@ -101,22 +101,22 @@ public:
      */
     virtual Uint8 numBits();
 
-    /** Get the Red Palette Color Lookup Table​ Descriptor
-     *  @param  value The value of Red Palette Color Lookup Table​ Descriptor
+    /** Get the Red Palette Color Lookup Table Descriptor
+     *  @param  value The value of Red Palette Color Lookup Table Descriptor
      *  @param  pos The position of the value to be retrieved (0..2)
      *  @return EC_Normal if value is found, an error code otherwise
      */
     virtual OFCondition getRedPaletteColorLookupTableDescriptor(Uint16& value, const unsigned long pos = 0) const;
 
-    /** Get the Green Palette Color Lookup Table​ Descriptor
-     *  @param  value The value of Green Palette Color Lookup Table​ Descriptor
+    /** Get the Green Palette Color Lookup Table Descriptor
+     *  @param  value The value of Green Palette Color Lookup Table Descriptor
      *  @param  pos The position of the value to be retrieved (0..2)
      *  @return EC_Normal if value is found, an error code otherwise
      */
     virtual OFCondition getGreenPaletteColorLookupTableDescriptor(Uint16& value, const unsigned long pos = 0) const;
 
-    /** Get the Blue Palette Color Lookup Table​ Descriptor
-     *  @param  value The value of Blue Palette Color Lookup Table​ Descriptor
+    /** Get the Blue Palette Color Lookup Table Descriptor
+     *  @param  value The value of Blue Palette Color Lookup Table Descriptor
      *  @param  pos The position of the value to be retrieved (0..2)
      *  @return EC_Normal if value is found, an error code otherwise
      */
@@ -129,21 +129,21 @@ public:
      */
     virtual OFCondition getPaletteColorLookupTableUID(OFString& value, const signed long pos = 0) const;
 
-    /** Get the Red Palette Color Lookup Table​ Data​ (16 bit version)
+    /** Get the Red Palette Color Lookup Table Data (16 bit version)
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
      */
     virtual OFCondition getRedPaletteColorLookupTableData(const Uint16*& dataCopy, unsigned long& numEntries);
 
-    /** Get the Red Palette Color Lookup Table​ Data​ (8 bit version)
+    /** Get the Red Palette Color Lookup Table Data (8 bit version)
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
      */
     virtual OFCondition getRedPaletteColorLookupTableData(const Uint8*& dataCopy, unsigned long& numEntries);
 
-    /** Get the Green Palette Color Lookup Table​ Data​ (16 bit version)
+    /** Get the Green Palette Color Lookup Table Data (16 bit version)
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
@@ -151,7 +151,7 @@ public:
     virtual
     OFCondition getGreenPaletteColorLookupTableData(const Uint16*& dataCopy, unsigned long& numEntries);
 
-    /** Get the Green Palette Color Lookup Table​ Data​ (8 bit version)
+    /** Get the Green Palette Color Lookup Table Data (8 bit version)
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
@@ -159,7 +159,7 @@ public:
     virtual
     OFCondition getGreenPaletteColorLookupTableData(const Uint8*& dataCopy, unsigned long& numEntries);
 
-    /** Get the Blue Palette Color Lookup Table​ Data​ (16 bit version)
+    /** Get the Blue Palette Color Lookup Table Data (16 bit version)
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
@@ -168,7 +168,7 @@ public:
     OFCondition getBluePaletteColorLookupTableData(const Uint16*& dataCopy, unsigned long& numEntries);
 
 
-    /** Get the Blue Palette Color Lookup Table​ Data​ (8 bit version)
+    /** Get the Blue Palette Color Lookup Table Data (8 bit version)
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
@@ -177,42 +177,42 @@ public:
     OFCondition getBluePaletteColorLookupTableData(const Uint8*& dataCopy, unsigned long& numEntries);
 
 
-    /** Get the Segmented Red Palette Color Lookup Table​ Data​
+    /** Get the Segmented Red Palette Color Lookup Table Data
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
      */
     virtual OFCondition getSegmentedRedPaletteColorLookupTableData(const Uint16*& dataCopy, unsigned long& numEntries);
 
-    /** Get the Segmented Red Palette Color Lookup Table​ Data​ (8 bit version)
+    /** Get the Segmented Red Palette Color Lookup Table Data (8 bit version)
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
      */
     virtual OFCondition getSegmentedRedPaletteColorLookupTableData(const Uint8*& dataCopy, unsigned long& numEntries);
 
-    /** Get the Segmented Green Palette Color Lookup Table​ Data​ (16 bit version)
+    /** Get the Segmented Green Palette Color Lookup Table Data (16 bit version)
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
      */
     virtual OFCondition getSegmentedGreenPaletteColorLookupTableData(const Uint16*& dataCopy, unsigned long& numEntries);
 
-    /** Get the Segmented Green Palette Color Lookup Table​ Data​ (8 bit version)
+    /** Get the Segmented Green Palette Color Lookup Table Data (8 bit version)
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
      */
     virtual OFCondition getSegmentedGreenPaletteColorLookupTableData(const Uint8*& dataCopy, unsigned long& numEntries);
 
-    /** Get the Segmented Blue Palette Color Lookup Table​ Data​ (16 bit version)
+    /** Get the Segmented Blue Palette Color Lookup Table Data (16 bit version)
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
      */
     virtual OFCondition getSegmentedBluePaletteColorLookupTableData(const Uint16*& dataCopy, unsigned long& numEntries);
 
-    /** Get the Segmented Blue Palette Color Lookup Table​ Data​ (8 bit version)
+    /** Get the Segmented Blue Palette Color Lookup Table Data (8 bit version)
      *  @param  dataCopy Reference to variable in which a copy of the value should be stored
      *  @param  numEntries Number of entries in the lookup table
      *  @return EC_Normal if successful, an error code otherwise
@@ -221,22 +221,22 @@ public:
 
     // ---------------- Setters -----------------------------
 
-    /** Set the Red Palette Color Lookup Table​ Descriptor
-     *  @param  value The value of Red Palette Color Lookup Table​ Descriptor
+    /** Set the Red Palette Color Lookup Table Descriptor
+     *  @param  value The value of Red Palette Color Lookup Table Descriptor
      *  @param  pos The position of the value to be set (0..2)
      *  @return EC_Normal if value is set, an error code otherwise
      */
     virtual OFCondition setRedPaletteColorLookupTableDescriptor(const Uint16& value, const unsigned long pos = 0);
 
-    /** Set the Green Palette Color Lookup Table​ Descriptor
-     *  @param  value The value of Green Palette Color Lookup Table​ Descriptor
+    /** Set the Green Palette Color Lookup Table Descriptor
+     *  @param  value The value of Green Palette Color Lookup Table Descriptor
      *  @param  pos The position of the value to be set (0..2)
      *  @return EC_Normal if value is set, an error code otherwise
      */
     virtual OFCondition setGreenPaletteColorLookupTableDescriptor(const Uint16& value, const unsigned long pos = 0);
 
-    /** Set the Blue Palette Color Lookup Table​ Descriptor
-     *  @param  value The value of Blue Palette Color Lookup Table​ Descriptor
+    /** Set the Blue Palette Color Lookup Table Descriptor
+     *  @param  value The value of Blue Palette Color Lookup Table Descriptor
      *  @param  pos The position of the value to be set (0..2)
      *  @return EC_Normal if value is set, an error code otherwise
      */
@@ -249,8 +249,8 @@ public:
      */
     virtual OFCondition setPaletteColorLookupTableUID(const OFString& value, const OFBool checkValue = OFTrue);
 
-    /** Set the Red Palette Color Lookup Table​ Data​ (16 bit version)
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Red Palette Color Lookup Table Data (16 bit version)
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -258,8 +258,8 @@ public:
     virtual OFCondition
     setRedPaletteColorLookupTableData(const Uint16* value, const unsigned long numEntries, const OFBool checkValue = OFTrue);
 
-    /** Set the Red Palette Color Lookup Table​ Data​ (8 bit version)
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Red Palette Color Lookup Table Data (8 bit version)
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -268,8 +268,8 @@ public:
     setRedPaletteColorLookupTableData(const Uint8* value, const unsigned long numEntries, const OFBool checkValue = OFTrue);
 
 
-    /** Set the Green Palette Color Lookup Table​ Data​ (16 bit version)
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Green Palette Color Lookup Table Data (16 bit version)
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -278,8 +278,8 @@ public:
     virtual OFCondition
     setGreenPaletteColorLookupTableData(const Uint16* value, const unsigned long numEntries, const OFBool checkValue = OFTrue);
 
-    /** Set the Green Palette Color Lookup Table​ Data​ (8 bit version)
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Green Palette Color Lookup Table Data (8 bit version)
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -288,8 +288,8 @@ public:
     virtual OFCondition
     setGreenPaletteColorLookupTableData(const Uint8* value, const unsigned long numEntries, const OFBool checkValue = OFTrue);
 
-    /** Set the Blue Palette Color Lookup Table​ Data​ (16 bit version)
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Blue Palette Color Lookup Table Data (16 bit version)
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -297,8 +297,8 @@ public:
     virtual OFCondition
     setBluePaletteColorLookupTableData(const Uint16* value, const unsigned long numEntries, const OFBool checkValue = OFTrue);
 
-    /** Set the Blue Palette Color Lookup Table​ Data​ (8 bit version).
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Blue Palette Color Lookup Table Data (8 bit version).
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -306,8 +306,8 @@ public:
     virtual OFCondition
     setBluePaletteColorLookupTableData(const Uint8* value, const unsigned long numEntries, const OFBool checkValue = OFTrue);
 
-    /** Set the Segmented Red Palette Color Lookup Table​ Data​ (16 bit version).
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Segmented Red Palette Color Lookup Table Data (16 bit version).
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -316,8 +316,8 @@ public:
                                                            const unsigned long numEntries,
                                                            const OFBool checkValue = OFTrue);
 
-    /** Set the Segmented Red Palette Color Lookup Table​ Data​ (8 bit version).
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Segmented Red Palette Color Lookup Table Data (8 bit version).
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -326,8 +326,8 @@ public:
                                                            const unsigned long numEntries,
                                                            const OFBool checkValue = OFTrue);
 
-    /** Set the Segmented Green Palette Color Lookup Table​ Data​ (16 bit version).
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Segmented Green Palette Color Lookup Table Data (16 bit version).
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -336,8 +336,8 @@ public:
                                                              const unsigned long numEntries,
                                                              const OFBool checkValue = OFTrue);
 
-    /** Set the Segmented Green Palette Color Lookup Table​ Data​ (8 bit version)
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Segmented Green Palette Color Lookup Table Data (8 bit version)
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -346,8 +346,8 @@ public:
                                                              const unsigned long numEntries,
                                                              const OFBool checkValue = OFTrue);
 
-    /** Set the Segmented Blue Palette Color Lookup Table​ Data​ (16 bit version).
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Segmented Blue Palette Color Lookup Table Data (16 bit version).
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -356,8 +356,8 @@ public:
                                                             const unsigned long numEntries,
                                                             const OFBool checkValue = OFTrue);
 
-    /** Set the Segmented Blue Palette Color Lookup Table​ Data​ (8 bit version).
-     *  @param  value The value of Red Palette Color Lookup Table​ Data​
+    /** Set the Segmented Blue Palette Color Lookup Table Data (8 bit version).
+     *  @param  value The value of Red Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in the lookup table
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
@@ -368,11 +368,11 @@ public:
 
     // ---------------- Convenience Setters -----------------------------
 
-    /** Set the Palette Color Lookup Table​ Data​ (red, green, blue, 8 or 16 bit).
+    /** Set the Palette Color Lookup Table Data (red, green, blue, 8 or 16 bit).
      *  @tparam T The data type of the color lookup table data. (Uint16 or Uint8)
-     *  @param  copyRed The value of Red Palette Color Lookup Table​ Data​
-     *  @param  copyGreen The value of Green Palette Color Lookup Table​ Data​
-     *  @param  copyBlue The value of Blue Palette Color Lookup Table​ Data​
+     *  @param  copyRed The value of Red Palette Color Lookup Table Data
+     *  @param  copyGreen The value of Green Palette Color Lookup Table Data
+     *  @param  copyBlue The value of Blue Palette Color Lookup Table Data
      *  @param  numEntries Number of entries in each of the lookup tables
      *  @param  checkValue Check value for conformance with VR (OW) and VM (1-n) if OFTrue
      *  @return EC_Normal if value is set, an error code otherwise
