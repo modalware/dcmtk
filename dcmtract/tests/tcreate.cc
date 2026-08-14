@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2025, OFFIS e.V.
+ *  Copyright (C) 2025-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -121,6 +121,11 @@ static void setGenericValues(TrcTractographyResults *tract)
 
     OFCHECK(result.good());
     OFCHECK(tractSet != OFnullptr);
+
+    // The Track Set Number is assigned automatically, starting with 1
+    Uint32 trackSetNumber = 0;
+    OFCHECK(tractSet->getTrackSetNumber(trackSetNumber).good());
+    OFCHECK_EQUAL(trackSetNumber, 1);
 
     // Add tracks to trackset
     Float32 points[] = { 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f };

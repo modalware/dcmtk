@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2016-2025, Open Connections GmbH
+ *  Copyright (C) 2016-2026, Open Connections GmbH
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation are maintained by
@@ -207,10 +207,10 @@ void TrcTrackSet::inventMissing()
 }
 
 
-OFCondition TrcTrackSet::getTrackSetNumber(Uint16& value,
+OFCondition TrcTrackSet::getTrackSetNumber(Uint32& value,
                                            const unsigned long pos) const
 {
-  return m_Item->findAndGetUint16(DCM_TrackSetNumber, value, pos);
+  return m_Item->findAndGetUint32(DCM_TrackSetNumber, value, pos);
 }
 
 

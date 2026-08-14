@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 2016-2025, Open Connections GmbH
+ *  Copyright (C) 2016-2026, Open Connections GmbH
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation are maintained by
@@ -123,7 +123,7 @@ public:
     *  @param  pos Index of the value to get (0..vm-1)
     *  @return EC_Normal if successful, an error code otherwise
     */
-  virtual OFCondition getTrackSetNumber(Uint16 &value,
+  virtual OFCondition getTrackSetNumber(Uint32 &value,
                                         const unsigned long pos = 0) const;
 
   /** Get Track Set Label
