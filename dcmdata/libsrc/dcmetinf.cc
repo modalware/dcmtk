@@ -377,7 +377,8 @@ OFCondition DcmMetaInfo::readGroupLength(DcmInputStream &inStream,
         {
             l_error = DcmItem::readSubElement(inStream, newTag, newValueLength, newxfer, glenc, maxReadLength);
             bytesRead += newValueLength;
-            if (l_error.good() && newTag == xtag && elementList->get() != NULL && newValueLength > 0)
+            if (l_error.good() && newTag == xtag && elementList->get() != NULL && newValueLength > 0
+                && elementList->get()->ident() == EVR_UL)
             {
                 l_error = (OFstatic_cast(DcmUnsignedLong *, elementList->get()))->getUint32(headerLen);
                 DCMDATA_TRACE("DcmMetaInfo::readGroupLength() Group Length of File Meta Information Header = " << headerLen + bytesRead);
