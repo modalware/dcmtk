@@ -999,7 +999,25 @@ OFCondition ImageSOPInstanceReferenceMacro::getReferencedSegmentNumber(OFVector<
 OFCondition ImageSOPInstanceReferenceMacro::setReferencedFrameNumber(const OFVector<Uint16>& values,
                                                                      const OFBool checkValue)
 {
-    return DcmIODUtil::setUint16ValuesOnElement(ReferencedFrameNumber, values, "1-n", checkValue);
+    // Referenced Frame Number has VR IS, so the values must be converted into a
+    // backslash-separated string
+    OFString str;
+    char buf[10];
+    OFVector<Uint16>::const_iterator it = values.begin();
+    while (it != values.end())
+    {
+        if (!str.empty())
+        {
+            str += "\\";
+        }
+        OFStandard::snprintf(buf, sizeof(buf), "%u", *it);
+        str += buf;
+        it++;
+    }
+    OFCondition result = (checkValue) ? DcmIntegerString::checkStringValue(str, "1-n") : EC_Normal;
+    if (result.good())
+        result = ReferencedFrameNumber.putOFStringArray(str);
+    return result;
 }
 
 OFCondition ImageSOPInstanceReferenceMacro::addReferencedFrameNumber(const Uint16& value, const OFBool checkValue)
