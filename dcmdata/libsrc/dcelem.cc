@@ -757,6 +757,16 @@ OFCondition DcmElement::changeValue(const void *value,
                 Uint8 * newValue;
                 // allocate new memory for value
 
+                // reject an appended length that would exceed the 32-bit DICOM
+                // value length limit; getLengthField() and num are both Uint32,
+                // so their sum can wrap and yield an undersized buffer that the
+                // memcpy of getLengthField() bytes below would then overrun.
+                if (num > DCM_UndefinedLength - getLengthField())
+                {
+                    errorFlag = EC_ElemLengthExceeds32BitField;
+                    return errorFlag;
+                }
+
                 // we want to use a non-throwing new here if available.
                 // If the allocation fails, we report an EC_MemoryExhausted error
                 // back to the caller.
