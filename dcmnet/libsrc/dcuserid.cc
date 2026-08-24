@@ -1,6 +1,6 @@
 /*
  *
- *  Copyright (C) 1997-2024, OFFIS e.V.
+ *  Copyright (C) 1997-2026, OFFIS e.V.
  *  All rights reserved.  See COPYRIGHT file for details.
  *
  *  This software and supporting documentation were developed by
@@ -321,8 +321,13 @@ OFCondition UserIdentityNegotiationSubItemRQ::parseFromBuffer(unsigned char *rea
     memcpy(m_secField, readBuffer, m_secFieldLength);
     //m_secField.append((const char*)readBuffer, m_secFieldLength);
     readBuffer += m_secFieldLength;
-    bytesRead += m_secFieldLength;
   }
+  // The declared secondary field is part of this sub-item for every identity
+  // type (only USERNAME+PASSWORD actually stores its value, see above). Always
+  // account for it in bytesRead so the caller advances past the entire sub-item;
+  // otherwise, for a non-password identity type with a non-zero secondary field,
+  // the remaining bytes would be re-parsed as a bogus following User-Info sub-item.
+  bytesRead += m_secFieldLength;
 
   return EC_Normal;
 }

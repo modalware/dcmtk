@@ -27,6 +27,7 @@
 #include "dcmtk/ofstd/oftest.h"
 #include "dcmtk/dcmnet/dulstruc.h"
 #include "dcmtk/dcmnet/extneg.h"
+#include "dcmtk/dcmnet/dcuserid.h"
 
 #include <cstring>                    /* for strlen() */
 
@@ -391,6 +392,62 @@ OFTEST(dcmnet_parseAssociate_presCtx_malformed_transferSyntax)
     // Error-path cleanup ran without crashing: the presentation context list was
     // destroyed and its head pointer cleared.
     OFCHECK(assoc.presentationContextList == NULL);
+
+    delete[] buf;
+}
+
+
+/* Regression test for the parser desynchronisation in
+ * UserIdentityNegotiationSubItemRQ::parseFromBuffer().
+ *
+ * For every identity type the sub-item on the wire carries a secondary-field
+ * length field plus that many secondary-field bytes. The value is only stored
+ * for USERNAME+PASSWORD (type 2), but the declared bytes are always present in
+ * the item. parseFromBuffer() used to add the secondary-field length to its
+ * returned bytesRead only inside the password branch; for any other identity
+ * type with a non-zero secondary field it under-reported bytesRead by exactly
+ * the secondary-field length. The caller (parseUserInfo) advances by bytesRead,
+ * so the trailing secondary-field bytes were re-parsed as a bogus following
+ * User-Info sub-item.
+ *
+ * This whitebox test calls parseFromBuffer() directly on a single, well-formed
+ * type-1 (username) sub-item with a non-empty primary AND secondary field and
+ * asserts that the whole item is consumed (bytesRead == availData). Pre-fix,
+ * bytesRead is short by the secondary-field length.
+ */
+OFTEST(dcmnet_parseUserIdentity_secondaryField_bytesRead)
+{
+    const unsigned short primLen = 3;
+    const unsigned short secLen  = 5;
+    // item body = identity type(1) + pos-response(1) + prim-length(2)
+    //             + primField + sec-length(2) + secField
+    const unsigned short itemLength = OFstatic_cast(unsigned short, 6 + primLen + secLen);
+    // whole sub-item on the wire = 4-byte sub-PDU header + item body
+    const unsigned long availData = SUBPDU_HEADER_BYTES + itemLength;
+
+    unsigned char *buf = new unsigned char[availData];
+    unsigned char *p = buf;
+    *p++ = DUL_TYPENEGOTIATIONOFUSERIDENTITY_REQ;   // item type 0x58
+    *p++ = 0x00;                                    // reserved
+    put_u16_be(p, itemLength);                      // item length
+    *p++ = ASC_USER_IDENTITY_USER;                  // identity type 1 (username, no password)
+    *p++ = 0x00;                                    // positive response requested = no
+    put_u16_be(p, primLen);                         // primary-field length
+    for (unsigned short i = 0; i < primLen; ++i) *p++ = OFstatic_cast(unsigned char, 'A' + i);
+    put_u16_be(p, secLen);                          // secondary-field length (non-zero!)
+    for (unsigned short i = 0; i < secLen;  ++i) *p++ = OFstatic_cast(unsigned char, 'a' + i);
+
+    OFCHECK_EQUAL(OFstatic_cast(unsigned long, p - buf), availData);
+
+    UserIdentityNegotiationSubItemRQ item;
+    unsigned long bytesRead = 0;
+    OFCondition cond = item.parseFromBuffer(buf, bytesRead, availData);
+
+    // The item is well-formed and must parse successfully...
+    OFCHECK(cond.good());
+    // ...and the parser must report the ENTIRE sub-item as consumed, including
+    // the secondary field, so the caller does not re-parse the trailing bytes.
+    OFCHECK_EQUAL(bytesRead, availData);
 
     delete[] buf;
 }

@@ -28,6 +28,7 @@ OFTEST_REGISTER(dcmnet_dimseStatusClass);
 OFTEST_REGISTER(dcmnet_parseAssociate_extNeg_truncated);
 OFTEST_REGISTER(dcmnet_parseAssociate_extNeg_malformed_itemLength);
 OFTEST_REGISTER(dcmnet_parseAssociate_duplicate_userIdentity);
+OFTEST_REGISTER(dcmnet_parseUserIdentity_secondaryField_bytesRead);
 OFTEST_REGISTER(dcmnet_parseAssociate_presCtx_malformed_transferSyntax);
 
 #ifdef WITH_THREADS
